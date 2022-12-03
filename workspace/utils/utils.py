@@ -14,7 +14,7 @@ def generateDataSetFromSingleCsv(csvFilePath):
                 if not associatedImage == TABLE_HEADER:
                     newCsvName = "{}.csv".format(associatedImage.split(JPG_EXTENSION)[0])
                     lineForCsv = "{},{},{},{},{}\n".format(splittedLine[18],splittedLine[1],splittedLine[2],splittedLine[3],splittedLine[4])
-                    if associatedImage in newCsvFileNames:
+                    if newCsvName in newCsvFileNames:
                         with open(newCsvName, "a") as newCsv:
                             try:
                                 newCsv.write(lineForCsv)
