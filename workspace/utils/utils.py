@@ -13,20 +13,21 @@ def generateDataSetFromSingleCsv(csvFilePath):
                 associatedImage = splittedLine[6]
                 if not associatedImage == TABLE_HEADER:
                     newCsvName = "{}.csv".format(associatedImage.split(JPG_EXTENSION)[0])
-                    lineForCsv = "{},{},{},{},{}\n".format(splittedLine[18],splittedLine[1],splittedLine[2],splittedLine[3],splittedLine[4])
-                    if newCsvName in newCsvFileNames:
-                        with open(newCsvName, "a") as newCsv:
-                            try:
-                                newCsv.write(lineForCsv)
-                            except:
-                                print("Failed on writing to csv file")
-                    else:
-                        newCsvFileNames.append(newCsvName)
-                        with open(newCsvName,"w") as newCsv:
-                            try:
-                                newCsv.write(lineForCsv)
-                            except:
-                                print("Failed on writing to csv file")
+                    if not splittedLine[18] == "":
+                        lineForCsv = "{},{},{},{},{}\n".format(splittedLine[18],splittedLine[1],splittedLine[2],splittedLine[3],splittedLine[4])
+                        if newCsvName in newCsvFileNames:
+                            with open(newCsvName, "a") as newCsv:
+                                try:
+                                    newCsv.write(lineForCsv)
+                                except:
+                                    print("Failed on writing to csv file")
+                        else:
+                            newCsvFileNames.append(newCsvName)
+                            with open(newCsvName,"w") as newCsv:
+                                try:
+                                    newCsv.write(lineForCsv)
+                                except:
+                                    print("Failed on writing to csv file")
         print("Succesfully divided csv {} into {}".format(csvFilePath, newCsvFileNames))
     else:
         print("csv path given is not a file")
