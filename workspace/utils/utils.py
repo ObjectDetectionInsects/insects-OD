@@ -28,6 +28,8 @@ JPG_EXTENSION = '.jpg'
 TABLE_HEADER = "parent_image_file_name"
 DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "DataSets")
 SPACE = " "
+
+
 def getSpecimenFamily(specimenSting):
     if specimenSting == SPECIMEN_FAMILIES_STR.Curculionidae:
         return SPECIMEN_FAMILIES.Curculionidae

@@ -55,10 +55,16 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
                 ymin = y_center - box_ht / 2
                 ymax = y_center + box_ht / 2
 
-                xmin_corr = int(xmin * self.width)
-                xmax_corr = int(xmax * self.width)
-                ymin_corr = int(ymin * self.height)
-                ymax_corr = int(ymax * self.height)
+                xmin_corr = int(xmin)
+                xmax_corr = int(xmax)
+                ymin_corr = int(ymin)
+                ymax_corr = int(ymax)
+
+                # TODO: to verify reason
+                # xmin_corr = int(xmin * self.width)
+                # xmax_corr = int(xmax * self.width)
+                # ymin_corr = int(ymin * self.height)
+                # ymax_corr = int(ymax * self.height)
 
                 boxes.append([xmin_corr, ymin_corr, xmax_corr, ymax_corr])
 
