@@ -25,9 +25,11 @@ SPECIMEN_FAMILIES_STR = Enum(['Curculionidae',
 CSV_EXTENSION = 'csv'
 CSV_DELIMETER = ','
 JPG_EXTENSION = '.jpg'
+PNG_EXTENSION = '.png'
 TABLE_HEADER = "parent_image_file_name"
 DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "DataSets")
 SPACE = " "
+IMAGE_EXTENSION = [JPG_EXTENSION, PNG_EXTENSION]
 
 
 def getSpecimenFamily(specimenSting):
@@ -53,7 +55,9 @@ def generateDataSetFromSingleCsv(csvFilePath):
                 splittedLine = line.split(CSV_DELIMETER)
                 associatedImage = splittedLine[6]
                 if not associatedImage == TABLE_HEADER:
-                    newCsvName = "{}.csv".format(associatedImage.split(JPG_EXTENSION)[0])
+                    for extension in IMAGE_EXTENSION:
+                        if extension in associatedImage:
+                            newCsvName = "{}.csv".format(associatedImage.split(extension)[0])
                     if not splittedLine[18] == "":
                         specimenFamily = getSpecimenFamily(splittedLine[18].replace(SPACE, ""))
                         lineForCsv = "{},{},{},{},{}\n".format(specimenFamily,splittedLine[1],splittedLine[2],splittedLine[3],splittedLine[4])
@@ -80,7 +84,7 @@ def generateAllDataSets(dataSetsPath):
     if os.path.isdir(dataSetsPath):
         for folder in os.listdir(dataSetsPath):
             currentDir = os.path.join(dataSetsPath, folder)
-            csvFiles = glob.glob(currentDir + '\\*.{}'.format(CSV_EXTENSION))
+            csvFiles = glob.glob(os.path.join(currentDir, '*.{}'.format(CSV_EXTENSION)))
             for csvfile in csvFiles:
                 generateDataSetFromSingleCsv(os.path.join(currentDir, csvfile))
     else:
