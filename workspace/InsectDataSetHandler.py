@@ -6,6 +6,7 @@ from utils.utils import DATA_SET_PATH
 from matplotlib import pyplot as plt
 from matplotlib import patches
 
+
 class InsectDataSetHandler(torch.utils.data.Dataset):
     def __init__(self, files_dir, width, height, transforms=None):
         self.transforms = transforms
@@ -45,20 +46,18 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
                 labels.append(1)
 
                 parsed = [float(x) for x in line.split(',')]
-                x_center = parsed[1]
-                y_center = parsed[2]
+                x_min = parsed[1]
+                y_min = parsed[2]
                 box_wt = parsed[3]
                 box_ht = parsed[4]
 
-                xmin = x_center - box_wt / 2
-                xmax = x_center + box_wt / 2
-                ymin = y_center - box_ht / 2
-                ymax = y_center + box_ht / 2
+                x_max = x_min + box_wt
+                y_max = y_min + box_ht
 
-                xmin_corr = int(xmin)
-                xmax_corr = int(xmax)
-                ymin_corr = int(ymin)
-                ymax_corr = int(ymax)
+                x_min_corr = int(x_min)
+                x_max_corr = int(x_max)
+                y_min_corr = int(y_min)
+                y_max_corr = int(y_max)
 
                 # TODO: to verify reason
                 # xmin_corr = int(xmin * self.width)
@@ -66,7 +65,7 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
                 # ymin_corr = int(ymin * self.height)
                 # ymax_corr = int(ymax * self.height)
 
-                boxes.append([xmin_corr, ymin_corr, xmax_corr, ymax_corr])
+                boxes.append([x_min_corr, y_min_corr, x_max_corr, y_max_corr])
 
         # convert boxes into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
@@ -75,7 +74,7 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
         area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
 
         # suppose all instances are not crowd
-        iscrowd = torch.zeros((boxes.shape[0],), dtype=torch.int64)
+        is_crowd = torch.zeros((boxes.shape[0],), dtype=torch.int64)
 
         labels = torch.as_tensor(labels, dtype=torch.int64)
 
@@ -83,7 +82,7 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
         target["boxes"] = boxes
         target["labels"] = labels
         target["area"] = area
-        target["iscrowd"] = iscrowd
+        target["iscrowd"] = is_crowd
         image_id = torch.tensor([idx])
         target["image_id"] = image_id
 
@@ -122,6 +121,7 @@ def plot_img_bbox(img, target):
 
 if __name__ == '__main__':
     dataSetDir = os.path.join(DATA_SET_PATH, "CircadianActivityNetivot-001")
+    print(dataSetDir)
     dataSetClass = InsectDataSetHandler(dataSetDir, width=7944, height=11256)
     image, target = dataSetClass[0]
     plot_img_bbox(image, target)
