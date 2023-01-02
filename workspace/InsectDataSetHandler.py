@@ -2,7 +2,7 @@ import torch
 import os
 import cv2
 import numpy as np
-from utils.utils import DATA_SET_PATH
+from utils.utils import DATA_SET_PATH, SPLITTED_DATA_SET_PATH
 from matplotlib import pyplot as plt
 from matplotlib import patches
 
@@ -14,9 +14,6 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
         self.height = height
         self.width = width
         self.imgs = [image for image in sorted(os.listdir(files_dir)) if image[-4:] == '.jpg']
-
-        # classes: 0 index is reserved for background
-        # self.classes = [_, 'cone']
 
     def __getitem__(self, idx):
         img_name = self.imgs[idx]
@@ -120,8 +117,8 @@ def plot_img_bbox(img, target):
 
 
 if __name__ == '__main__':
-    dataSetDir = os.path.join(DATA_SET_PATH, "CircadianActivityNetivot-001")
+    dataSetDir = SPLITTED_DATA_SET_PATH
     print(dataSetDir)
-    dataSetClass = InsectDataSetHandler(dataSetDir, width=7944, height=11256)
+    dataSetClass = InsectDataSetHandler(dataSetDir, width=2000, height=2000)
     image, target = dataSetClass[0]
     plot_img_bbox(image, target)
