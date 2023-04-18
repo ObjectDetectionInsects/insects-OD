@@ -132,6 +132,7 @@ def split_csv(csv_path):
         data = file.readlines()
         for line in data:
             split_line = line.split(',')
+
             x_pos = int(split_line[CSV_X_POS])
             y_pos = int(split_line[CSV_Y_POS])
             rational_x_pos = x_pos % WIDTH
