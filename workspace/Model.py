@@ -18,8 +18,12 @@ class Model:
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     def createDataSets(self, dataDir, imageDimensionX, imageDimensionY):
-        self.dataSet = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY, transforms=get_transform(train= True))
-        self.dataSet_Test = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY, transforms= get_transform(train =False))
+        self.dataSet = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY)
+        self.dataSet_Test = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY)
+
+    def testDataSets(self):
+        image, target = self.dataSet[0]
+        plot_img_bbox(image, target)
 
     def splitAndCreateDataLoaders(self):
         # split the dataset in train and test set
@@ -30,7 +34,7 @@ class Model:
         test_split = 0.2
         tsize = int(len(self.dataSet) * test_split)
         dataset = torch.utils.data.Subset(self.dataSet, indices[:-tsize])
-        dataset_test = torch.utils.data.Subset(self.dataSet_Test, indices[-tsize:])
+        dataset_test = torch.utils.data.Subset(self.dataSet, indices[-tsize:])
 
         # define training and validation data loaders
         self.dataLoader = torch.utils.data.DataLoader(
@@ -87,7 +91,7 @@ class Model:
         return torchtrans.ToPILImage()(image).convert('RGB')
 
     def testOurModel(self, imageNumber, iou_threshold):
-        img, target = self.dataSet_Test[imageNumber]
+        img, target = self.dataSet[imageNumber]
         self.model.eval()
         with torch.no_grad():
             prediction = self.model([img.to(self.device)])[0]
