@@ -27,8 +27,10 @@ SPECIMEN_FAMILIES_STR = Enum(['Curculionidae',
 
 WIDTH = 2000
 HEIGHT = 2000
-CSV_WIDTH_POS = 1
-CSV_HEIGHT_POS = 2
+CSV_X_POS = 1
+CSV_Y_POS = 2
+CSV_W_POS = 3
+CSV_H_POS = 4
 JPG_EXTENSION = 'jpg'
 CSV_EXTENSION = 'csv'
 PNG_EXTENSION = 'png'
@@ -55,6 +57,7 @@ def getSpecimenFamily(specimenSting):
         return SPECIMEN_FAMILIES.UnknownFamily
     else:
         print("unsupported type {}".format(specimenSting))
+
 
 def generateDataSetFromSingleCsv(csvFilePath):
     newCsvFileNames = []
@@ -124,22 +127,32 @@ def split_image(image_path):
 
 
 def split_csv(csv_path):
-    path = r'/Users/idoyacovhai/UniversityProject/insects-OD/DataSets/test' # to fix
     csv_filename = get_filename(csv_path)
     with open(csv_path, 'r') as file:
         data = file.readlines()
         for line in data:
             split_line = line.split(',')
-            width_count = int(int(split_line[CSV_WIDTH_POS]) / WIDTH)
-            height_count = int(int(split_line[CSV_HEIGHT_POS]) / HEIGHT)
-            update_csv_filename = csv_filename + "-{}-{}.".format(width_count, height_count) + CSV_EXTENSION
-            update_csv_path = os.path.join(SPLITTED_DATA_SET_PATH, update_csv_filename)
-            update_line = split_line
-            update_line[CSV_WIDTH_POS] = int(split_line[CSV_WIDTH_POS]) % WIDTH
-            update_line[CSV_HEIGHT_POS] = int(split_line[CSV_HEIGHT_POS]) % HEIGHT
-            str_update_line = [str(i) for i in update_line]
-            with open(update_csv_path, 'a') as file_to_update:
-                file_to_update.write(",".join(str_update_line))
+
+            x_pos = int(split_line[CSV_X_POS])
+            y_pos = int(split_line[CSV_Y_POS])
+            rational_x_pos = x_pos % WIDTH
+            rational_y_pos = y_pos % HEIGHT
+            w_pos = int(split_line[CSV_W_POS])
+            h_pos = int(split_line[CSV_H_POS])
+
+            width_count = int(x_pos / WIDTH)
+            height_count = int(y_pos / HEIGHT)
+
+            # Add only bug with full frame in the sliced image
+            if rational_x_pos + w_pos < WIDTH and rational_y_pos + h_pos < HEIGHT:
+                update_csv_filename = csv_filename + "-{}-{}.".format(width_count, height_count) + CSV_EXTENSION
+                update_csv_path = os.path.join(SPLITTED_DATA_SET_PATH, update_csv_filename)
+                update_line = split_line
+                update_line[CSV_X_POS] = x_pos % WIDTH
+                update_line[CSV_Y_POS] = y_pos % HEIGHT
+                str_update_line = [str(i) for i in update_line]
+                with open(update_csv_path, 'a') as file_to_update:
+                    file_to_update.write(",".join(str_update_line))
 
 
 def split_images():
@@ -148,10 +161,12 @@ def split_images():
             current_dir = os.path.join(DATA_SET_PATH, folder)
             csv_files = glob.glob(os.path.join(current_dir, '*.{}'.format(CSV_EXTENSION)))
             jpg_files = glob.glob(os.path.join(current_dir, '*{}'.format(JPG_EXTENSION)))
-            print("Found the following files to split: ", ", ".join(csv_files))
+            print("\nFound the following files to split: ", ", ".join(csv_files))
+            print("\nIn folder: " + current_dir)
             for csv_file in csv_files:
                 for jpg_file in jpg_files:
                     if get_filename(csv_file) == get_filename(jpg_file):
+                        print("\nSplitting the following files: ", ", ".join([csv_file, jpg_file]))
                         split_csv(csv_file)
                         split_image(jpg_file)
             if len(jpg_files) > 0:
@@ -175,6 +190,7 @@ def plot_img_bbox(img, target):
         # Draw the bounding box on top of the image
         a.add_patch(rect)
     plt.show()
+
 
 if __name__ == '__main__':
     # pass
