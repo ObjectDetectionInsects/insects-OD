@@ -131,7 +131,7 @@ def split_csv(csv_path):
     with open(csv_path, 'r') as file:
         data = file.readlines()
         for line in data:
-            split_line = line.split(',')
+            split_line = line.strip('\n').split(',')
             x_pos = int(split_line[CSV_X_POS])
             y_pos = int(split_line[CSV_Y_POS])
             rational_x_pos = x_pos % WIDTH
@@ -142,16 +142,22 @@ def split_csv(csv_path):
             width_count = int(x_pos / WIDTH)
             height_count = int(y_pos / HEIGHT)
 
-            # Add only bug with full frame in the sliced image
-            if rational_x_pos + w_pos < WIDTH and rational_y_pos + h_pos < HEIGHT:
-                update_csv_filename = csv_filename + "-{}-{}.".format(width_count, height_count) + CSV_EXTENSION
-                update_csv_path = os.path.join(SPLITTED_DATA_SET_PATH, update_csv_filename)
-                update_line = split_line
-                update_line[CSV_X_POS] = x_pos % WIDTH
-                update_line[CSV_Y_POS] = y_pos % HEIGHT
-                str_update_line = [str(i) for i in update_line]
-                with open(update_csv_path, 'a') as file_to_update:
-                    file_to_update.write(",".join(str_update_line))
+            # Fix the frames of a sliced bugs
+            if rational_x_pos + w_pos > WIDTH:
+                split_line[CSV_W_POS] = WIDTH - rational_x_pos
+            if rational_y_pos + h_pos > HEIGHT:
+                split_line[CSV_H_POS] = HEIGHT - rational_y_pos
+
+            update_csv_filename = csv_filename + "-{}-{}.".format(width_count, height_count) + CSV_EXTENSION
+            update_csv_path = os.path.join(SPLITTED_DATA_SET_PATH, update_csv_filename)
+            split_line[CSV_X_POS] = rational_x_pos
+            split_line[CSV_Y_POS] = rational_y_pos
+
+            updated_line = [str(i) for i in split_line]
+            updated_line = ",".join(updated_line) + '\n'
+
+            with open(update_csv_path, 'a') as file_to_update:
+                file_to_update.write(updated_line)
 
 
 def split_images():
@@ -161,7 +167,7 @@ def split_images():
             csv_files = glob.glob(os.path.join(current_dir, '*.{}'.format(CSV_EXTENSION)))
             jpg_files = glob.glob(os.path.join(current_dir, '*{}'.format(JPG_EXTENSION)))
             print("\nFound the following files to split: ", ", ".join(csv_files))
-            print("\nIn folder: " + current_dir)
+            print("Inside folder: " + current_dir)
             for csv_file in csv_files:
                 for jpg_file in jpg_files:
                     if get_filename(csv_file) == get_filename(jpg_file):
@@ -170,6 +176,7 @@ def split_images():
                         split_image(jpg_file)
             if len(jpg_files) > 0:
                 split_image(jpg_files[0])
+
 
 def plot_img_bbox(img, target):
     # plot the image and bboxes
