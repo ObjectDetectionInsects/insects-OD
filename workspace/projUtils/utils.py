@@ -14,9 +14,9 @@ def enum(**enums):
     return type('Enum', (), enums)
 
 
-SPECIMEN_FAMILIES = enum(Curculionidae=0, Gelechiidae=1,
-                        GeneralBeetles=2, GeneralMoth=3,
-                        GeneralParasitoidWasp=4, UnknownFamily=5)
+SPECIMEN_FAMILIES = enum(Curculionidae=1, Gelechiidae=2,
+                        GeneralBeetles=3, GeneralMoth=4,
+                        GeneralParasitoidWasp=5, UnknownFamily=6)
 
 SPECIMEN_FAMILIES_STR = Enum(['Curculionidae',
                               'Gelechiidae',
@@ -24,7 +24,7 @@ SPECIMEN_FAMILIES_STR = Enum(['Curculionidae',
                               'Generalmoth',
                               'Generalparasitoidwasp',
                               'Unknownfamily'])
-
+DEFAULT_LABEL = 0
 WIDTH = 2000
 HEIGHT = 2000
 CSV_X_POS = 1
@@ -58,8 +58,14 @@ def getSpecimenFamily(specimenSting):
     else:
         print("unsupported type {}".format(specimenSting))
 
+def dataIsFull(splittedLine, onlyDetction):
+    if not onlyDetction:
+        return not splittedLine[18] == ""
+    if splittedLine[1] == "" or splittedLine[2] == "" or splittedLine[3] == "" or splittedLine[4] == "":
+        return False
+    return True
 
-def generateDataSetFromSingleCsv(csvFilePath):
+def generateDataSetFromSingleCsv(csvFilePath, onlyDetection = True):
     newCsvFileNames = []
     if os.path.isfile(csvFilePath):
         with open(csvFilePath, 'r') as file:
@@ -70,8 +76,11 @@ def generateDataSetFromSingleCsv(csvFilePath):
                     for extension in IMAGE_EXTENSION:
                         if extension in associatedImage:
                             newCsvName = associatedImage.split(extension)[0] + CSV_EXTENSION
-                    if not splittedLine[18] == "":
-                        specimenFamily = getSpecimenFamily(splittedLine[18].replace(SPACE, ""))
+                    if dataIsFull(splittedLine, onlyDetection):
+                        if onlyDetection:
+                            specimenFamily = DEFAULT_LABEL
+                        else:
+                            specimenFamily = getSpecimenFamily(splittedLine[18].replace(SPACE, ""))
                         lineForCsv = "{},{},{},{},{}\n".format(specimenFamily, splittedLine[1], splittedLine[2],
                                                                splittedLine[3], splittedLine[4])
                         if newCsvName in newCsvFileNames:
@@ -93,13 +102,13 @@ def generateDataSetFromSingleCsv(csvFilePath):
     return
 
 
-def generateAllDataSets(dataSetsPath):
+def generateAllDataSets(dataSetsPath, onlyDetection = True):
     if os.path.isdir(dataSetsPath):
         for folder in os.listdir(dataSetsPath):
             currentDir = os.path.join(dataSetsPath, folder)
             csvFiles = glob.glob(os.path.join(currentDir, '*.{}'.format(CSV_EXTENSION)))
             for csvfile in csvFiles:
-                generateDataSetFromSingleCsv(os.path.join(currentDir, csvfile))
+                generateDataSetFromSingleCsv(os.path.join(currentDir, csvfile), onlyDetection)
     else:
         print("Path given does not exist")
 
@@ -200,7 +209,7 @@ def plot_img_bbox(img, target):
 
 if __name__ == '__main__':
     # pass
-    # generateAllDataSets(DATA_SET_PATH)
+    # generateAllDataSets(DATA_SET_PATH, onlyDetection=True)
     if not os.path.isdir(SPLITTED_DATA_SET_PATH):
         os.mkdir(SPLITTED_DATA_SET_PATH)
     split_images()

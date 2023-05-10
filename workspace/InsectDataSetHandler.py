@@ -7,11 +7,12 @@ import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 
 class InsectDataSetHandler(torch.utils.data.Dataset):
-    def __init__(self, files_dir, width, height, transforms=None):
+    def __init__(self, files_dir, width, height, onlyDetection = True,  transforms=None):
         self.transforms = transforms
         self.files_dir = files_dir
         self.height = height
         self.width = width
+        self.onlyDetection = onlyDetection
         self.imgs = [image for image in sorted(os.listdir(files_dir)) if image[-4:] == '.jpg']
 
     def __getitem__(self, idx):
@@ -39,9 +40,13 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
         # box coordinates for xml files are extracted and corrected for image size given
         with open(annot_file_path) as f:
             for line in f:
-                labels.append(1)
-
                 parsed = [float(x) for x in line.split(',')]
+                if self.onlyDetection:
+                    labels.append(0)
+                else:
+                    labels.append([parsed[0]])
+
+
                 x_min = parsed[1]
                 y_min = parsed[2]
                 box_wt = parsed[3]
@@ -115,6 +120,6 @@ def get_transform(train):
 if __name__ == '__main__':
     dataSetDir = SPLITTED_DATA_SET_PATH
     print(dataSetDir)
-    dataSetClass = InsectDataSetHandler(dataSetDir, width=2000, height=2000)
-    image, target = dataSetClass[0]
+    dataSetClass = InsectDataSetHandler(dataSetDir, width=2000, height=2000, onlyDetection = True)
+    image, target = dataSetClass[500]
     plot_img_bbox(image, target)
