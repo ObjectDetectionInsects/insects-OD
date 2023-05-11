@@ -206,12 +206,25 @@ def plot_img_bbox(img, target):
         a.add_patch(rect)
     plt.show()
 
+#TODO this is a temporary fix! for Ori testing. a better fix to be made.
+def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
+    csv_files = glob.glob(os.path.join(splittedPath, '*.{}'.format(CSV_EXTENSION)))
+    jpg_files = glob.glob(os.path.join(splittedPath, '*{}'.format(JPG_EXTENSION)))
+    for jpg_file in jpg_files:
+        found = False
+        for csv_file in csv_files:
+            if get_filename(csv_file) == get_filename(jpg_file):
+                found = True
+        if not found:
+            print("removing file {}".format(jpg_file))
+            os.remove(jpg_file)
 
 if __name__ == '__main__':
     # pass
     # generateAllDataSets(DATA_SET_PATH, onlyDetection=True)
-    if not os.path.isdir(SPLITTED_DATA_SET_PATH):
-        os.mkdir(SPLITTED_DATA_SET_PATH)
-    split_images()
+    # if not os.path.isdir(SPLITTED_DATA_SET_PATH):
+    #     os.mkdir(SPLITTED_DATA_SET_PATH)
+    # split_images()
+    fixIncorrectSplittedCsv()
 
 
