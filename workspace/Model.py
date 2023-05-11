@@ -18,12 +18,8 @@ class Model:
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     def createDataSets(self, dataDir, imageDimensionX, imageDimensionY):
-        self.dataSet = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY)
-        self.dataSet_Test = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY)
-
-    def testDataSets(self):
-        image, target = self.dataSet[0]
-        plot_img_bbox(image, target)
+        self.dataSet = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
+        self.dataSet_Test = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
 
     def splitAndCreateDataLoaders(self):
         # split the dataset in train and test set
