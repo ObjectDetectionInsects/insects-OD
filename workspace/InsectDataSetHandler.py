@@ -2,9 +2,10 @@ import torch
 import os
 import cv2
 import numpy as np
-from projUtils.utils import SPLITTED_DATA_SET_PATH, plot_img_bbox
+from projUtils.utils import SPLITTED_DATA_SET_PATH, plotImage
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
+from random import randrange
 
 class InsectDataSetHandler(torch.utils.data.Dataset):
     def __init__(self, files_dir, width, height, onlyDetection = True,  transforms=None):
@@ -14,6 +15,7 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
         self.width = width
         self.onlyDetection = onlyDetection
         self.imgs = [image for image in sorted(os.listdir(files_dir)) if image[-4:] == '.jpg']
+        self.classes = [0, 1] #TODO add actual classes based on utils enum
 
     def __getitem__(self, idx):
         img_name = self.imgs[idx]
@@ -121,5 +123,8 @@ if __name__ == '__main__':
     dataSetDir = SPLITTED_DATA_SET_PATH
     print(dataSetDir)
     dataSetClass = InsectDataSetHandler(dataSetDir, width=2000, height=2000, onlyDetection = True)
-    image, target = dataSetClass[5]
-    plot_img_bbox(image, target)
+    for imageNumber in range(20):
+        imageNumbRandom = randrange(1000)
+        image, target = dataSetClass[imageNumbRandom]
+        plotImage(image, target)
+    print("plotted images for verification")

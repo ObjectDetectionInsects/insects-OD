@@ -3,9 +3,10 @@ import torch
 import torchvision
 from torchvision import transforms as torchtrans
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from projUtils.utils import plot_img_bbox, SPECIMEN_FAMILIES_STR
+from projUtils.utils import plotImageModelOutput, SPECIMEN_FAMILIES_STR
 import utils, engine
 import warnings
+from random import randrange
 warnings.filterwarnings('ignore')
 
 class Model:
@@ -91,12 +92,16 @@ class Model:
         return torchtrans.ToPILImage()(image).convert('RGB')
 
     def testOurModel(self, imageNumber, iou_threshold):
-        img, target = self.dataSet[imageNumber]
-        self.model.eval()
-        with torch.no_grad():
-            prediction = self.model([img.to(self.device)])[0]
+        for imageNum in range(imageNumber):
+            imageNumberToEval = randrange(100)
+            img, target = self.dataSet[imageNumberToEval]
+            self.model.eval()
+            with torch.no_grad():
+                prediction = self.model([img.to(self.device)])[0]
 
-        print('MODEL OUTPUT\n')
-        nms_prediction = self.filterOutPuts(prediction, iou_threshold=iou_threshold)
+            print('MODEL OUTPUT\n')
+            nms_prediction = self.filterOutPuts(prediction, iou_threshold=iou_threshold)
 
-        plot_img_bbox(self.covnvertToPil(img), nms_prediction)
+            plotImageModelOutput(self.covnvertToPil(img), nms_prediction)
+        print("finished evaluation")
+

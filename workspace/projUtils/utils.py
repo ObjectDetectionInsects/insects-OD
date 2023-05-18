@@ -65,7 +65,7 @@ def dataIsFull(splittedLine, onlyDetction):
         return False
     return True
 
-def generateDataSetFromSingleCsv(csvFilePath, onlyDetection = True):
+def generateDataSetFromSingleCsv(csvFilePath, saveLocation ,onlyDetection = True):
     newCsvFileNames = []
     if os.path.isfile(csvFilePath):
         with open(csvFilePath, 'r') as file:
@@ -84,14 +84,14 @@ def generateDataSetFromSingleCsv(csvFilePath, onlyDetection = True):
                         lineForCsv = "{},{},{},{},{}\n".format(specimenFamily, splittedLine[1], splittedLine[2],
                                                                splittedLine[3], splittedLine[4])
                         if newCsvName in newCsvFileNames:
-                            with open(newCsvName, "a") as newCsv:
+                            with open(os.path.join(saveLocation, newCsvName), "a") as newCsv:
                                 try:
                                     newCsv.write(lineForCsv)
                                 except:
                                     print("Failed on writing to csv file")
                         else:
                             newCsvFileNames.append(newCsvName)
-                            with open(newCsvName,"w") as newCsv:
+                            with open(os.path.join(saveLocation, newCsvName),"w") as newCsv:
                                 try:
                                     newCsv.write(lineForCsv)
                                 except:
@@ -108,7 +108,7 @@ def generateAllDataSets(dataSetsPath, onlyDetection = True):
             currentDir = os.path.join(dataSetsPath, folder)
             csvFiles = glob.glob(os.path.join(currentDir, '*.{}'.format(CSV_EXTENSION)))
             for csvfile in csvFiles:
-                generateDataSetFromSingleCsv(os.path.join(currentDir, csvfile), onlyDetection)
+                generateDataSetFromSingleCsv(os.path.join(currentDir, csvfile), currentDir ,onlyDetection)
     else:
         print("Path given does not exist")
 
@@ -197,7 +197,7 @@ def get_single_insect_image(image_path, x, y, w, h):
     a.save(os.path.join(SINGLE_INSECTS_PATH, new_file_name))
 
 
-def plot_img_bbox(img, target):
+def plotImageModelOutput(img, target):
     # plot the image and bboxes
     # Bounding boxes are defined as follows: x-min y-min width height
     fig, a = plt.subplots(1, 1)
@@ -216,6 +216,23 @@ def plot_img_bbox(img, target):
             width, height,
             linewidth=2,
             edgecolor=color,
+            facecolor='none'
+        )
+        # Draw the bounding box on top of the image
+        a.add_patch(rect)
+    plt.show()
+
+def plotImage(img, target):
+    fig, a = plt.subplots(1, 1)
+    fig.set_size_inches(5, 5)
+    a.imshow(img)
+    for box in (target['boxes']):
+        x, y, width, height = box[0], box[1], box[2] - box[0], box[3] - box[1]
+        rect = patches.Rectangle(
+            (x, y),
+            width, height,
+            linewidth=2,
+            edgecolor='r',
             facecolor='none'
         )
         # Draw the bounding box on top of the image
