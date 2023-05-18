@@ -3,19 +3,23 @@ import torch
 import torchvision
 from torchvision import transforms as torchtrans
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from projUtils.utils import plot_img_bbox
+from projUtils.utils import plot_img_bbox, SPECIMEN_FAMILIES_STR
 import utils, engine
 import warnings
 warnings.filterwarnings('ignore')
 
 class Model:
-    def __init__(self):
+    def __init__(self, detetionOnly = True):
         self.dataSet = None
         self.dataSet_Test = None
         self.dataLoader = None
         self.dataLoader_Test = None
         self.model = None
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        if detetionOnly:
+            self.numOfClasses = 2
+        else:
+            self.numOfClasses = len(SPECIMEN_FAMILIES_STR) + 1
 
     def createDataSets(self, dataDir, imageDimensionX, imageDimensionY):
         self.dataSet = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
@@ -49,10 +53,10 @@ class Model:
             collate_fn=utils.collate_fn,
         )
 
-    def getPreTrainedObject(self, num_classes):
+    def getPreTrainedObject(self):
         model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
         in_features = model.roi_heads.box_predictor.cls_score.in_features
-        model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+        model.roi_heads.box_predictor = FastRCNNPredictor(in_features, self.numOfClasses)
         self.model = model
 
     def train(self, numberOfEpochs):

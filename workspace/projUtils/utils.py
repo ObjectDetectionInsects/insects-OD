@@ -40,7 +40,7 @@ DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "DataSets
 SPLITTED_DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "SplittedDataSets")
 SPACE = " "
 IMAGE_EXTENSION = [JPG_EXTENSION, PNG_EXTENSION]
-
+SINGLE_INSECTS_PATH = "" #TODO add actual path @ido
 
 def getSpecimenFamily(specimenSting):
     if specimenSting == SPECIMEN_FAMILIES_STR.Curculionidae:
@@ -187,6 +187,16 @@ def split_images():
                 split_image(jpg_files[0])
 
 
+def get_single_insect_image(image_path, x, y, w, h):
+    image_filename = get_filename(image_path)
+    image_extension = os.path.basename(image_path).split('.')[-1]
+    img = Image.open(image_path)
+    box = (x, y, x + w, y + h)
+    a = img.crop(box)
+    new_file_name = image_filename + "-insect-{}-{}.".format(x, y) + image_extension
+    a.save(os.path.join(SINGLE_INSECTS_PATH, new_file_name))
+
+
 def plot_img_bbox(img, target):
     # plot the image and bboxes
     # Bounding boxes are defined as follows: x-min y-min width height
@@ -225,12 +235,15 @@ def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
             print("removing file {}".format(jpg_file))
             os.remove(jpg_file)
 
+
 if __name__ == '__main__':
     # pass
-    # generateAllDataSets(DATA_SET_PATH, onlyDetection=True)
-    # if not os.path.isdir(SPLITTED_DATA_SET_PATH):
-    #     os.mkdir(SPLITTED_DATA_SET_PATH)
-    # split_images()
+    generateAllDataSets(DATA_SET_PATH, onlyDetection=True)
+    if not os.path.isdir(SPLITTED_DATA_SET_PATH):
+        os.mkdir(SPLITTED_DATA_SET_PATH)
+    split_images()
     fixIncorrectSplittedCsv()
+    # get_single_insect_image(r'/Users/idoyacovhai/UniversityProject/insects-OD/SplittedDataSets/n1.1-0-0.jpg', 1205,893,143,157)
+
 
 
