@@ -40,7 +40,7 @@ DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "DataSets
 SPLITTED_DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "SplittedDataSets")
 SPACE = " "
 IMAGE_EXTENSION = [JPG_EXTENSION, PNG_EXTENSION]
-
+SINGLE_INSECTS_PATH = "" #TODO add actual path @ido
 
 def getSpecimenFamily(specimenSting):
     if specimenSting == SPECIMEN_FAMILIES_STR.Curculionidae:
