@@ -229,19 +229,6 @@ def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
             print("removing file {}".format(jpg_file))
             os.remove(jpg_file)
 
-#TODO this is a temporary fix! for Ori testing. a better fix to be made.
-def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
-    csv_files = glob.glob(os.path.join(splittedPath, '*.{}'.format(CSV_EXTENSION)))
-    jpg_files = glob.glob(os.path.join(splittedPath, '*{}'.format(JPG_EXTENSION)))
-    for jpg_file in jpg_files:
-        found = False
-        for csv_file in csv_files:
-            if get_filename(csv_file) == get_filename(jpg_file):
-                found = True
-        if not found:
-            print("removing file {}".format(jpg_file))
-            os.remove(jpg_file)
-
 
 if __name__ == '__main__':
     # pass
