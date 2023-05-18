@@ -232,12 +232,12 @@ def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
 
 if __name__ == '__main__':
     # pass
-    # generateAllDataSets(DATA_SET_PATH, onlyDetection=True)
-    # if not os.path.isdir(SPLITTED_DATA_SET_PATH):
-    #     os.mkdir(SPLITTED_DATA_SET_PATH)
-    # split_images()
-    #fixIncorrectSplittedCsv()
-    get_single_insect_image(r'/Users/idoyacovhai/UniversityProject/insects-OD/SplittedDataSets/n1.1-0-0.jpg', 1205,893,143,157)
+    generateAllDataSets(DATA_SET_PATH, onlyDetection=True)
+    if not os.path.isdir(SPLITTED_DATA_SET_PATH):
+        os.mkdir(SPLITTED_DATA_SET_PATH)
+    split_images()
+    fixIncorrectSplittedCsv()
+    # get_single_insect_image(r'/Users/idoyacovhai/UniversityProject/insects-OD/SplittedDataSets/n1.1-0-0.jpg', 1205,893,143,157)
 
 
 
