@@ -71,7 +71,7 @@ class Model:
         for epoch in range(numberOfEpochs):
             engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)
             lr_scheduler.step()
-            engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
+            # engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
 
     def filterOutPuts(self, orig_prediction, iou_threshold = 0.3):
         keep = torchvision.ops.nms(orig_prediction['boxes'], orig_prediction['scores'], iou_threshold)

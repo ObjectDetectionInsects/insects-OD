@@ -105,7 +105,7 @@ def get_transform(train):
   if train:
     return A.Compose(
       [
-        A.HorizontalFlip(0.5),
+        # A.HorizontalFlip(0.5),
         # ToTensorV2 converts image to pytorch tensor without div by 255
         ToTensorV2(p=1.0)
       ],
@@ -121,5 +121,5 @@ if __name__ == '__main__':
     dataSetDir = SPLITTED_DATA_SET_PATH
     print(dataSetDir)
     dataSetClass = InsectDataSetHandler(dataSetDir, width=2000, height=2000, onlyDetection = True)
-    image, target = dataSetClass[500]
+    image, target = dataSetClass[5]
     plot_img_bbox(image, target)

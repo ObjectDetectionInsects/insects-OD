@@ -7,5 +7,5 @@ if __name__ == '__main__':
     Model.splitAndCreateDataLoaders()
     #Temporary behavior - using existing model that is modified for our needs
     Model.getPreTrainedObject(2)
-    Model.train(10)
+    Model.train(1)
     Model.testOurModel(3, 0.01)

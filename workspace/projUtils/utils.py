@@ -193,13 +193,19 @@ def plot_img_bbox(img, target):
     fig, a = plt.subplots(1, 1)
     fig.set_size_inches(5, 5)
     a.imshow(img)
-    for box in (target['boxes']):
-        x, y, width, height = box[0], box[1], box[2] - box[0], box[3] - box[1]
+    for box,score in zip(target['boxes'],target['scores']):
+        x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (box[3] - box[1]).cpu().numpy()
+        score = score.item()
+        color = (score,0,0)
+        if score > 0.8:
+            color = (0,0,score)
+        if score > 0.9:
+            color = (0,score,0)
         rect = patches.Rectangle(
             (x, y),
             width, height,
             linewidth=2,
-            edgecolor='r',
+            edgecolor=color,
             facecolor='none'
         )
         # Draw the bounding box on top of the image
