@@ -1,8 +1,7 @@
 import torch
-import os
 import cv2
 import numpy as np
-from projUtils.utils import SPLITTED_DATA_SET_PATH, plotImage
+from projUtils.utils import *
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 from random import randrange
@@ -44,7 +43,7 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
             for line in f:
                 parsed = [float(x) for x in line.split(',')]
                 if self.onlyDetection:
-                    labels.append(0)
+                    labels.append(DEFAULT_LABEL)
                 else:
                     labels.append([parsed[0]])
 

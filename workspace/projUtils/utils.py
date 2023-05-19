@@ -13,10 +13,10 @@ class Enum(set):
 def enum(**enums):
     return type('Enum', (), enums)
 
-
-SPECIMEN_FAMILIES = enum(Curculionidae=1, Gelechiidae=2,
-                        GeneralBeetles=3, GeneralMoth=4,
-                        GeneralParasitoidWasp=5, UnknownFamily=6)
+#please note - labels 1 and 0 are saved for default insect and background
+SPECIMEN_FAMILIES = enum(Curculionidae=2, Gelechiidae=3,
+                        GeneralBeetles=4, GeneralMoth=5,
+                        GeneralParasitoidWasp=6, UnknownFamily=7)
 
 SPECIMEN_FAMILIES_STR = Enum(['Curculionidae',
                               'Gelechiidae',
@@ -24,7 +24,7 @@ SPECIMEN_FAMILIES_STR = Enum(['Curculionidae',
                               'Generalmoth',
                               'Generalparasitoidwasp',
                               'Unknownfamily'])
-DEFAULT_LABEL = 0
+DEFAULT_LABEL = 1
 WIDTH = 2000
 HEIGHT = 2000
 CSV_X_POS = 1
