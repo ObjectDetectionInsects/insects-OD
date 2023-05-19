@@ -38,6 +38,10 @@ CSV_DELIMETER = ','
 TABLE_HEADER = "parent_image_file_name"
 DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "DataSets")
 SPLITTED_DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "SplittedDataSets")
+TRAIN_DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../SplittedDataSets"), "TrainSet")
+TEST_DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../SplittedDataSets"), "TestSet")
+VALIDATION_DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../SplittedDataSets"), "ValidationSet")
+
 SPACE = " "
 IMAGE_EXTENSION = [JPG_EXTENSION, PNG_EXTENSION]
 SINGLE_INSECTS_PATH = "" #TODO add actual path @ido
@@ -206,20 +210,21 @@ def plot_img_bbox(img, target):
     for box,score in zip(target['boxes'],target['scores']):
         x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (box[3] - box[1]).cpu().numpy()
         score = score.item()
-        color = (score,0,0)
-        if score > 0.8:
-            color = (0,0,score)
-        if score > 0.9:
-            color = (0,score,0)
-        rect = patches.Rectangle(
-            (x, y),
-            width, height,
-            linewidth=2,
-            edgecolor=color,
-            facecolor='none'
-        )
-        # Draw the bounding box on top of the image
-        a.add_patch(rect)
+        if score > 0.2:
+            color = (score,0,0)
+            if score > 0.8:
+                color = (0,0,score)
+            if score > 0.9:
+                color = (0,score,0)
+            rect = patches.Rectangle(
+                (x, y),
+                width, height,
+                linewidth=2,
+                edgecolor=color,
+                facecolor='none'
+            )
+            # Draw the bounding box on top of the image
+            a.add_patch(rect)
     plt.show()
 
 #TODO this is a temporary fix! for Ori testing. a better fix to be made.
@@ -235,13 +240,49 @@ def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
             print("removing file {}".format(jpg_file))
             os.remove(jpg_file)
 
+def split_train_test_validation(SPLITTED_DATA_SET_PATH):
+    for path in (VALIDATION_DATA_SET_PATH, TEST_DATA_SET_PATH, TRAIN_DATA_SET_PATH):
+        if not os.path.isdir(path):
+            os.mkdir(path)
+    count = 1
+    for filename in os.listdir(SPLITTED_DATA_SET_PATH):
+        # Check if the file is a JPG image
+        if filename.endswith(".jpg"):
+            # Get the base name of the file without the extension
+            basename = os.path.splitext(filename)[0]
+            # Find any CSV files with the same name
+            csv_files = [f for f in os.listdir(SPLITTED_DATA_SET_PATH) if f.startswith(basename) and f.endswith(".csv")]
+            # If at least one CSV file was found, rename it and number it from 1
+            if csv_files:
+                for csv_file in csv_files:
+                    # Rename the CSV file
+                    if(count%7==0):
+                        if(count%2==0):
+                            os.rename(os.path.join(SPLITTED_DATA_SET_PATH, csv_file),
+                                      os.path.join(TEST_DATA_SET_PATH, f"{count}.csv"))
+                            os.rename(os.path.join(SPLITTED_DATA_SET_PATH, filename),
+                                      os.path.join(TEST_DATA_SET_PATH, f"{count}.jpg"))
+                        else:
+                            os.rename(os.path.join(SPLITTED_DATA_SET_PATH, csv_file),
+                                      os.path.join(VALIDATION_DATA_SET_PATH, f"{count}.csv"))
+                            os.rename(os.path.join(SPLITTED_DATA_SET_PATH, filename),
+                                      os.path.join(VALIDATION_DATA_SET_PATH, f"{count}.jpg"))
+                    if(count%7!=0):
+                      os.rename(os.path.join(SPLITTED_DATA_SET_PATH, csv_file), os.path.join(TRAIN_DATA_SET_PATH, f"{count}.csv"))
+                      os.rename(os.path.join(SPLITTED_DATA_SET_PATH, filename), os.path.join(TRAIN_DATA_SET_PATH, f"{count}.jpg"))
+
+                    # Increment the counter variable
+                    count += 1
+            else:
+                os.remove(os.path.join(SPLITTED_DATA_SET_PATH, filename))
 
 if __name__ == '__main__':
     # pass
-    generateAllDataSets(DATA_SET_PATH, onlyDetection=True)
+    # generateAllDataSets(DATA_SET_PATH, onlyDetection=True)
     if not os.path.isdir(SPLITTED_DATA_SET_PATH):
         os.mkdir(SPLITTED_DATA_SET_PATH)
-    split_images()
+    # split_images()
+    split_train_test_validation(SPLITTED_DATA_SET_PATH)
     fixIncorrectSplittedCsv()
     # get_single_insect_image(r'/Users/idoyacovhai/UniversityProject/insects-OD/SplittedDataSets/n1.1-0-0.jpg', 1205,893,143,157)
 

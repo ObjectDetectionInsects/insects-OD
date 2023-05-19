@@ -42,7 +42,7 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
             for line in f:
                 parsed = [float(x) for x in line.split(',')]
                 if self.onlyDetection:
-                    labels.append(0)
+                    labels.append(1)
                 else:
                     labels.append([parsed[0]])
 
