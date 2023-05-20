@@ -118,24 +118,11 @@ class Model:
         # Obtain model predictions for test images
         test_images = [self.dataSet_Validation[i][0] for i in range(len(self.dataSet_Validation))]
         test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(len(self.dataSet_Validation))]
-
-        # img, target = self.dataSet_Validation[1]
-        # test_images = images
-        # test_labels = target["labels"]
         with torch.no_grad():
             predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0]) for img in test_images]
-        # predictions = self.model.predict(test_images)
-        # nms_prediction = self.filterOutPuts(self.model([img.to(self.device)])[0], iou_threshold=iou_threshold)
-
-        # Calculate precision and recall at different threshold levels
-        # thresholds = np.linspace(0, 1, 30)  # Adjust the number of thresholds as desired
-        # precision_values = []
-        # recall_values = []
         true_positives = 0
         false_positives = 0
         false_negatives = 0
-        # x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (box[3] - box[1]).cpu().numpy()
-
         a = True
         preds = []
         tests = []
@@ -148,10 +135,6 @@ class Model:
         for pred_1 in preds:
             a = True
             for tests_1 in tests:
-                # print(f"pred[0] - tests[0] {pred[0]} - {tests_1[0]} = {abs(pred[0] - tests_1[0])}")
-                # print(f"pred[1] - tests[1] {pred[1]} - {tests_1[1]} = {abs(pred[1] - tests_1[1])}")
-                # print(f"pred[2] - tests[2] {pred[2]} - {tests_1[2]} = {abs(pred[2] - tests_1[2])}")
-                # print(f"pred[3] - tests[3] {pred[3]} - {tests_1[3]} = {abs(pred[3] - tests_1[3])}")
                 if a & (abs(pred_1[0] - tests_1[0]) <= thresh_hold) & (abs(pred_1[1] - tests_1[1]) <= thresh_hold) & (abs(pred_1[2] - tests_1[2]) <= thresh_hold) & (abs(pred_1[3] - tests_1[3]) <= thresh_hold):
                     true_positives+=1
                     a = False
@@ -161,10 +144,6 @@ class Model:
         for tests_1 in tests:
             a = True
             for pred_1 in preds:
-                # print(f"pred[0] - tests[0] {pred[0]} - {tests_1[0]} = {abs(pred[0] - tests_1[0])}")
-                # print(f"pred[1] - tests[1] {pred[1]} - {tests_1[1]} = {abs(pred[1] - tests_1[1])}")
-                # print(f"pred[2] - tests[2] {pred[2]} - {tests_1[2]} = {abs(pred[2] - tests_1[2])}")
-                # print(f"pred[3] - tests[3] {pred[3]} - {tests_1[3]} = {abs(pred[3] - tests_1[3])}")
                 if a & (abs(pred_1[0] - tests_1[0]) <= thresh_hold) & (abs(pred_1[1] - tests_1[1]) <= thresh_hold) & (abs(pred_1[2] - tests_1[2]) <= thresh_hold) & (abs(pred_1[3] - tests_1[3]) <= thresh_hold):
                     a = False
             if a:
@@ -172,50 +151,3 @@ class Model:
         print("True Positives:", true_positives)
         print("False Positives:", false_positives)
         print("True Negatives:", false_negatives)
-
-        # x_test, y_test, width_test, height_test = test_box[0].cpu().numpy(), test_box[1].cpu().numpy(), (
-        #             test_box[2] - test_box[0]).cpu().numpy(), (test_box[3] - test_box[1]).cpu().numpy()
-        # x_pred, y_pred, width_pred, height_pred = pred_box[0].cpu().numpy(), pred_box[1].cpu().numpy(), (
-        #             pred_box[2] - pred_box[0]).cpu().numpy(), (pred_box[3] - pred_box[1]).cpu().numpy()
-
-        # print(true_positives)       a = True
-        # for pred,test in zip(predictions,test_boxes):
-        #     for test_box in test:
-        #         for pred_box in pred["boxes"]:
-        #             for i in range(4):
-        #                 a = a & (abs(pred_box[i] - test_box[i]) <= 70)
-        #                 if a:
-        #                     true_positives+=1
-        #
-
-        # for threshold in thresholds:
-        #     true_positives = 0
-        #     false_positives = 0
-        #     false_negatives = 0
-        #
-        #     for i in range(len(predictions)):
-        #         predicted_label = 1 if predictions[i] >= threshold else 0
-        #         true_label = test_labels[i]
-        #
-        #         if predicted_label == 1 and true_label == 1:
-        #             true_positives += 1
-        #         elif predicted_label == 1 and true_label == 0:
-        #             false_positives += 1
-        #         elif predicted_label == 0 and true_label == 1:
-        #             false_negatives += 1
-        #
-        #     precision = true_positives / (true_positives + false_positives)
-        #     recall = true_positives / (true_positives + false_negatives)
-        #
-        #     precision_values.append(precision)
-        #     recall_values.append(recall)
-
-        # Plotting the precision-recall graph
-        # plt.plot(recall_values, precision_values, marker='o')
-        # plt.xlabel('Recall')
-        # plt.ylabel('Precision')
-        # plt.title('Precision-Recall Graph for RCNN')
-        # plt.ylim([0, 1])
-        # plt.xlim([0, 1])
-        # plt.show()
-        # return precision_values, recall_values
