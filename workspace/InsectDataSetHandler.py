@@ -1,4 +1,5 @@
 import torch
+import os
 import cv2
 import numpy as np
 from projUtils.utils import *
@@ -16,7 +17,6 @@ class InsectDataSetHandler(torch.utils.data.Dataset):
         self.width = width
         self.onlyDetection = self.configHandler.getIsOnlyDetect()
         self.imgs = [image for image in sorted(os.listdir(files_dir)) if image[-4:] == '.jpg']
-        self.classes = [0, 1] #TODO add actual classes based on utils enum
 
     def __getitem__(self, idx):
         img_name = self.imgs[idx]

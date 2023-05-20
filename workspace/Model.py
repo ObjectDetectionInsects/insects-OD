@@ -15,6 +15,7 @@ class Model:
         self.configHandler = ConfigHandler(CONFIGPATH)
         self.dataSet = None
         self.dataSet_Test = None
+        self.dataSet_Validation = None
         self.dataLoader = None
         self.dataLoader_Test = None
         self.model = None
@@ -25,25 +26,17 @@ class Model:
             self.numOfClasses = len(SPECIMEN_FAMILIES_STR) + 1 # We add one for the background
 
     def createDataSets(self, dataDir, imageDimensionX, imageDimensionY):
-        self.dataSet = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
-        self.dataSet_Test = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
+        self.dataSet = InsectDataSetHandler(TRAIN_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
+        self.dataSet_Test = InsectDataSetHandler(TEST_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
+        self.dataSet_Validation = InsectDataSetHandler(VALIDATION_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
 
     def splitAndCreateDataLoaders(self):
         # split the dataset in train and test set
         torch.manual_seed(1)
-        indices = torch.randperm(len(self.dataSet)).tolist()
-
-        # train test split
-        test_split = self.configHandler.getTestSplit()
         batch_size = self.configHandler.getImageBatchSize()
-
-        tsize = int(len(self.dataSet) * test_split)
-        dataset = torch.utils.data.Subset(self.dataSet, indices[:-tsize])
-        dataset_test = torch.utils.data.Subset(self.dataSet, indices[-tsize:])
-
         # define training and validation data loaders
         self.dataLoader = torch.utils.data.DataLoader(
-            dataset,
+            self.dataSet,
             batch_size=batch_size,
             shuffle=True,
             num_workers=4,
@@ -51,7 +44,7 @@ class Model:
         )
 
         self.dataLoader_Test = torch.utils.data.DataLoader(
-            dataset_test,
+            self.dataSet_Test,
             batch_size=batch_size,
             shuffle=False,
             num_workers=4,
@@ -99,7 +92,7 @@ class Model:
         imageAmount = self.configHandler.getTestImagesAmount()
         for imageNum in range(imageAmount):
             imageNumberToEval = randrange(100)
-            img, target = self.dataSet[imageNumberToEval]
+            img, target = self.dataSet_Validation[imageNumberToEval]
             self.model.eval()
             with torch.no_grad():
                 prediction = self.model([img.to(self.device)])[0]
@@ -112,3 +105,40 @@ class Model:
                                  self.configHandler.getSaveImagesEnabled(), "{}.png".format(imageNum))
         print("finished evaluation")
 
+
+    def calculate_precision_recall(self):
+        # Obtain model predictions for test images
+        test_images = [self.dataSet_Validation[i][0] for i in range(len(self.dataSet_Validation))]
+        test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(len(self.dataSet_Validation))]
+        with torch.no_grad():
+            predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0]) for img in test_images]
+        true_positives = 0
+        false_positives = 0
+        false_negatives = 0
+        a = True
+        preds = []
+        tests = []
+        for pred, test in zip(predictions, test_boxes):
+            for test_box in test:
+                preds.append((test_box[0].to(torch.int32), test_box[1].to(torch.int32), (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32)))
+            for pred_box in pred["boxes"]:
+                tests.append((pred_box[0].to(torch.int32), pred_box[1].to(torch.int32), (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32)))
+        thresh_hold = 150
+        for pred_1 in preds:
+            a = True
+            for tests_1 in tests:
+                if a & (abs(pred_1[0] - tests_1[0]) <= thresh_hold) & (abs(pred_1[1] - tests_1[1]) <= thresh_hold) & (abs(pred_1[2] - tests_1[2]) <= thresh_hold) & (abs(pred_1[3] - tests_1[3]) <= thresh_hold):
+                    true_positives+=1
+                    a = False
+            if a:
+                false_positives +=1
+        for tests_1 in tests:
+            a = True
+            for pred_1 in preds:
+                if a & (abs(pred_1[0] - tests_1[0]) <= thresh_hold) & (abs(pred_1[1] - tests_1[1]) <= thresh_hold) & (abs(pred_1[2] - tests_1[2]) <= thresh_hold) & (abs(pred_1[3] - tests_1[3]) <= thresh_hold):
+                    a = False
+            if a:
+                false_negatives +=1
+        print("True Positives:", true_positives)
+        print("False Positives:", false_positives)
+        print("True Negatives:", false_negatives)
