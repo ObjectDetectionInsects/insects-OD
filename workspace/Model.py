@@ -3,12 +3,10 @@ import torch
 import torchvision
 from torchvision import transforms as torchtrans
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from projUtils.utils import plot_img_bbox, SPECIMEN_FAMILIES_STR
+from projUtils.utils import *
 import utils, engine
 import warnings
-from projUtils import utils as U
-import numpy as np
-from matplotlib import pyplot as plt
+
 
 warnings.filterwarnings('ignore')
 
@@ -28,25 +26,13 @@ class Model:
             self.numOfClasses = len(SPECIMEN_FAMILIES_STR) + 1
 
     def createDataSets(self, dataDir, imageDimensionX, imageDimensionY):
-        # TRAIN_DATA_SET_PATH = os
-        # TEST_DATA_SET_PATH = os.
-        # VALIDATION_DATA_SET_PATH
-        self.dataSet = InsectDataSetHandler(U.TRAIN_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
-        self.dataSet_Test = InsectDataSetHandler(U.TEST_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
-        self.dataSet_Validation = InsectDataSetHandler(U.VALIDATION_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
-        # print(self.dataSet)
+        self.dataSet = InsectDataSetHandler(TRAIN_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
+        self.dataSet_Test = InsectDataSetHandler(TEST_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
+        self.dataSet_Validation = InsectDataSetHandler(VALIDATION_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
 
     def splitAndCreateDataLoaders(self):
         # split the dataset in train and test set
         torch.manual_seed(1)
-        # indices = torch.randperm(len(self.dataSet)).tolist()
-
-        # train test split
-        # test_split = 0.2
-        # tsize = int(len(self.dataSet) * test_split)
-        # dataset = torch.utils.data.Subset(self.dataSet, indices[:-tsize])
-        # dataset_test = torch.utils.data.Subset(self.dataSet, indices[-tsize:])
-
         # define training and validation data loaders
         self.dataLoader = torch.utils.data.DataLoader(
             self.dataSet,

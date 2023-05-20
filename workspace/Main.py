@@ -9,8 +9,4 @@ if __name__ == '__main__':
     Model.getPreTrainedObject()
     Model.train(1)
     Model.testOurModel(1, 0.01)
-    # Model.testOurModel(2, 0.01)
-    # Model.testOurModel(3, 0.01)
-    Model.testOurModel(4, 0.01)
-    # Model.testOurModel(5, 0.01)
     Model.calculate_precision_recall()

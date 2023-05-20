@@ -270,7 +270,6 @@ def split_train_test_validation(SPLITTED_DATA_SET_PATH):
                     if(count%7!=0):
                       os.rename(os.path.join(SPLITTED_DATA_SET_PATH, csv_file), os.path.join(TRAIN_DATA_SET_PATH, f"{count}.csv"))
                       os.rename(os.path.join(SPLITTED_DATA_SET_PATH, filename), os.path.join(TRAIN_DATA_SET_PATH, f"{count}.jpg"))
-
                     # Increment the counter variable
                     count += 1
             else:
