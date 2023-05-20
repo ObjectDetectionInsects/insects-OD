@@ -3,7 +3,7 @@ import torch
 import torchvision
 from torchvision import transforms as torchtrans
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from projUtils.utils import plotImageModelOutput, SPECIMEN_FAMILIES_STR
+from projUtils.utils import *
 import utils, engine
 import warnings
 from random import randrange
@@ -13,6 +13,7 @@ class Model:
     def __init__(self, detetionOnly = True):
         self.dataSet = None
         self.dataSet_Test = None
+        self.dataSet_Validation = None
         self.dataLoader = None
         self.dataLoader_Test = None
         self.model = None
@@ -23,23 +24,16 @@ class Model:
             self.numOfClasses = len(SPECIMEN_FAMILIES_STR) + 1
 
     def createDataSets(self, dataDir, imageDimensionX, imageDimensionY):
-        self.dataSet = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
-        self.dataSet_Test = InsectDataSetHandler(dataDir, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
+        self.dataSet = InsectDataSetHandler(TRAIN_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
+        self.dataSet_Test = InsectDataSetHandler(TEST_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
+        self.dataSet_Validation = InsectDataSetHandler(VALIDATION_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
 
     def splitAndCreateDataLoaders(self):
         # split the dataset in train and test set
         torch.manual_seed(1)
-        indices = torch.randperm(len(self.dataSet)).tolist()
-
-        # train test split
-        test_split = 0.2
-        tsize = int(len(self.dataSet) * test_split)
-        dataset = torch.utils.data.Subset(self.dataSet, indices[:-tsize])
-        dataset_test = torch.utils.data.Subset(self.dataSet, indices[-tsize:])
-
         # define training and validation data loaders
         self.dataLoader = torch.utils.data.DataLoader(
-            dataset,
+            self.dataSet,
             batch_size=10,
             shuffle=True,
             num_workers=4,
@@ -47,7 +41,7 @@ class Model:
         )
 
         self.dataLoader_Test = torch.utils.data.DataLoader(
-            dataset_test,
+            self.dataSet_Test,
             batch_size=10,
             shuffle=False,
             num_workers=4,
@@ -76,7 +70,7 @@ class Model:
         for epoch in range(numberOfEpochs):
             engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)
             lr_scheduler.step()
-            # engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
+            engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
 
     def filterOutPuts(self, orig_prediction, iou_threshold = 0.3):
         keep = torchvision.ops.nms(orig_prediction['boxes'], orig_prediction['scores'], iou_threshold)
@@ -94,7 +88,7 @@ class Model:
     def testOurModel(self, imageNumber, iou_threshold):
         for imageNum in range(imageNumber):
             imageNumberToEval = randrange(100)
-            img, target = self.dataSet[imageNumberToEval]
+            img, target = self.dataSet_Validation[imageNumberToEval]
             self.model.eval()
             with torch.no_grad():
                 prediction = self.model([img.to(self.device)])[0]
@@ -105,3 +99,40 @@ class Model:
             plotImageModelOutput(self.covnvertToPil(img), nms_prediction)
         print("finished evaluation")
 
+
+    def calculate_precision_recall(self):
+        # Obtain model predictions for test images
+        test_images = [self.dataSet_Validation[i][0] for i in range(len(self.dataSet_Validation))]
+        test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(len(self.dataSet_Validation))]
+        with torch.no_grad():
+            predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0]) for img in test_images]
+        true_positives = 0
+        false_positives = 0
+        false_negatives = 0
+        a = True
+        preds = []
+        tests = []
+        for pred, test in zip(predictions, test_boxes):
+            for test_box in test:
+                preds.append((test_box[0].to(torch.int32), test_box[1].to(torch.int32), (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32)))
+            for pred_box in pred["boxes"]:
+                tests.append((pred_box[0].to(torch.int32), pred_box[1].to(torch.int32), (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32)))
+        thresh_hold = 150
+        for pred_1 in preds:
+            a = True
+            for tests_1 in tests:
+                if a & (abs(pred_1[0] - tests_1[0]) <= thresh_hold) & (abs(pred_1[1] - tests_1[1]) <= thresh_hold) & (abs(pred_1[2] - tests_1[2]) <= thresh_hold) & (abs(pred_1[3] - tests_1[3]) <= thresh_hold):
+                    true_positives+=1
+                    a = False
+            if a:
+                false_positives +=1
+        for tests_1 in tests:
+            a = True
+            for pred_1 in preds:
+                if a & (abs(pred_1[0] - tests_1[0]) <= thresh_hold) & (abs(pred_1[1] - tests_1[1]) <= thresh_hold) & (abs(pred_1[2] - tests_1[2]) <= thresh_hold) & (abs(pred_1[3] - tests_1[3]) <= thresh_hold):
+                    a = False
+            if a:
+                false_negatives +=1
+        print("True Positives:", true_positives)
+        print("False Positives:", false_positives)
+        print("True Negatives:", false_negatives)

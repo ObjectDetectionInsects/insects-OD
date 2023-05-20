@@ -8,3 +8,4 @@ if __name__ == '__main__':
     Model.getPreTrainedObject()
     Model.train(3)
     Model.testOurModel(5, 0.01)
+    Model.calculate_precision_recall()
