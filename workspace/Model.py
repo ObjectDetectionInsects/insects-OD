@@ -34,7 +34,7 @@ class Model:
         # define training and validation data loaders
         self.dataLoader = torch.utils.data.DataLoader(
             self.dataSet,
-            batch_size=10,
+            batch_size=1,
             shuffle=True,
             num_workers=4,
             collate_fn=utils.collate_fn,
@@ -42,7 +42,7 @@ class Model:
 
         self.dataLoader_Test = torch.utils.data.DataLoader(
             self.dataSet_Test,
-            batch_size=10,
+            batch_size=1,
             shuffle=False,
             num_workers=4,
             collate_fn=utils.collate_fn,
@@ -87,7 +87,7 @@ class Model:
 
     def testOurModel(self, imageNumber, iou_threshold):
         for imageNum in range(imageNumber):
-            imageNumberToEval = randrange(100)
+            imageNumberToEval = 1
             img, target = self.dataSet_Validation[imageNumberToEval]
             self.model.eval()
             with torch.no_grad():
