@@ -10,4 +10,6 @@ if __name__ == '__main__':
     Model.getPreTrainedObject()
     Model.train()
     Model.testOurModel(0.01)
-    Model.calculate_precision_recall()
+    if configObject.getDoPrecissionRecall():
+        print("Generating confusion matrix - this might take a while!")
+        Model.calculate_precision_recall()

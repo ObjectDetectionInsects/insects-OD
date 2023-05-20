@@ -1,8 +1,8 @@
-import os.path
+import os
 from workspace.projUtils.Singleton import Singleton
 from configparser import ConfigParser
 
-CONFIGPATH = os.path.join(os.getcwd(), "config.dat")
+CONFIGPATH = os.path.join(os.path.abspath(__file__ + "/../../"), "config.dat")
 
 class ConfigHandler(Singleton):
     def __init__(self, configFilePath):
@@ -15,26 +15,26 @@ class ConfigHandler(Singleton):
 
 
     def getIsOnlyDetect(self):
-        if self.config.has_option('Hyper_parameters', 'onlyDetection'):
-            return self.config.getboolean('Hyper_parameters', 'onlyDetection')
+        if self.config.has_option('HyperParameters', 'onlyDetection'):
+            return self.config.getboolean('HyperParameters', 'onlyDetection')
         else:
             return True
 
     def getEpochAmount(self):
-        if self.config.has_option('Hyper_parameters', 'epochs'):
-            return self.config.getint('Hyper_parameters', 'epochs')
+        if self.config.has_option('HyperParameters', 'epochs'):
+            return self.config.getint('HyperParameters', 'epochs')
         else:
             return 3
 
     def getTestSplit(self):
-        if self.config.has_option('Hyper_parameters', 'testSplit'):
-            return self.config.getfloat('Hyper_parameters', 'testSplit')
+        if self.config.has_option('HyperParameters', 'testSplit'):
+            return self.config.getfloat('HyperParameters', 'testSplit')
         else:
             return 0.2
 
     def getImageBatchSize(self):
-        if self.config.has_option('Hyper_parameters', 'imageBatchSize'):
-            return self.config.getint('Hyper_parameters', 'imageBatchSize')
+        if self.config.has_option('HyperParameters', 'imageBatchSize'):
+            return self.config.getint('HyperParameters', 'imageBatchSize')
         else:
             return 10
 
@@ -63,11 +63,30 @@ class ConfigHandler(Singleton):
         else:
             return 10
 
+    def getRetangaleOverlap(self):
+        if self.config.has_option('HyperParameters', 'rectangleOverLapLimitInPixels'):
+            return self.config.getint('HyperParameters', 'rectangleOverLapLimitInPixels')
+        else:
+            return 150
+
+    def getDoPrecissionRecall(self):
+        if self.config.has_option('HyperParameters', 'performPrecisionRecall'):
+            return self.config.getboolean('HyperParameters', 'performPrecisionRecall')
+        else:
+            return False
+
+    def getDoEpochEvaluation(self):
+        if self.config.has_option('HyperParameters', 'performEvaluate'):
+            return self.config.getboolean('HyperParameters', 'performEvaluate')
+        else:
+            return False
+
 if __name__ == '__main__':
     #for testing purposes of configHandler object
     configHandler = ConfigHandler(CONFIGPATH)
     print("verifying parameters")
-    print(configHandler.getIsOnlyDetect())
-    print(configHandler.getSaveImagesAmount())
-    print(configHandler.getTestSplit())
-    print(configHandler.getScoreLimitBlue())
+    # print(configHandler.getIsOnlyDetect())
+    # print(configHandler.getSaveImagesAmount())
+    # print(configHandler.getTestSplit())
+    # print(configHandler.getScoreLimitBlue())
+    print(configHandler.getRetangaleOverlap())

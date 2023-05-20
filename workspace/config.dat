@@ -1,9 +1,11 @@
-[Hyper_parameters]
+[HyperParameters]
 onlyDetection = True
-epochs = 0
+performEvaluate = True
+performPrecisionRecall = True
+epochs = 3
 testSplit = 0.2
 imageBatchSize = 10
-
+rectangleOverLapLimitInPixels = 150
 
 [ScoreLimits]
 green = 0.9

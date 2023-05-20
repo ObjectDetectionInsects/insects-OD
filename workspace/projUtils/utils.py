@@ -262,50 +262,50 @@ def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
             print("removing file {}".format(jpg_file))
             os.remove(jpg_file)
 
-def split_train_test_validation(SPLITTED_DATA_SET_PATH):
+def split_train_test_validation(splittedPath = SPLITTED_DATA_SET_PATH):
     for path in (VALIDATION_DATA_SET_PATH, TEST_DATA_SET_PATH, TRAIN_DATA_SET_PATH):
         if not os.path.isdir(path):
             os.mkdir(path)
     count = 1
-    for filename in os.listdir(SPLITTED_DATA_SET_PATH):
+    for filename in os.listdir(splittedPath):
         # Check if the file is a JPG image
         if filename.endswith(".jpg"):
             # Get the base name of the file without the extension
             basename = os.path.splitext(filename)[0]
             # Find any CSV files with the same name
-            csv_files = [f for f in os.listdir(SPLITTED_DATA_SET_PATH) if f.startswith(basename) and f.endswith(".csv")]
+            csv_files = [f for f in os.listdir(splittedPath) if f.startswith(basename) and f.endswith(".csv")]
             # If at least one CSV file was found, rename it and number it from 1
             if csv_files:
                 for csv_file in csv_files:
                     # Rename the CSV file
                     if(count%7==0):
                         if(count%2==0):
-                            os.rename(os.path.join(SPLITTED_DATA_SET_PATH, csv_file),
+                            os.rename(os.path.join(splittedPath, csv_file),
                                       os.path.join(TEST_DATA_SET_PATH, f"{count}.csv"))
-                            os.rename(os.path.join(SPLITTED_DATA_SET_PATH, filename),
+                            os.rename(os.path.join(splittedPath, filename),
                                       os.path.join(TEST_DATA_SET_PATH, f"{count}.jpg"))
                         else:
-                            os.rename(os.path.join(SPLITTED_DATA_SET_PATH, csv_file),
+                            os.rename(os.path.join(splittedPath, csv_file),
                                       os.path.join(VALIDATION_DATA_SET_PATH, f"{count}.csv"))
-                            os.rename(os.path.join(SPLITTED_DATA_SET_PATH, filename),
+                            os.rename(os.path.join(splittedPath, filename),
                                       os.path.join(VALIDATION_DATA_SET_PATH, f"{count}.jpg"))
                     if(count%7!=0):
-                      os.rename(os.path.join(SPLITTED_DATA_SET_PATH, csv_file), os.path.join(TRAIN_DATA_SET_PATH, f"{count}.csv"))
-                      os.rename(os.path.join(SPLITTED_DATA_SET_PATH, filename), os.path.join(TRAIN_DATA_SET_PATH, f"{count}.jpg"))
+                      os.rename(os.path.join(splittedPath, csv_file), os.path.join(TRAIN_DATA_SET_PATH, f"{count}.csv"))
+                      os.rename(os.path.join(splittedPath, filename), os.path.join(TRAIN_DATA_SET_PATH, f"{count}.jpg"))
                     # Increment the counter variable
                     count += 1
             else:
-                os.remove(os.path.join(SPLITTED_DATA_SET_PATH, filename))
+                os.remove(os.path.join(splittedPath, filename))
 
 if __name__ == '__main__':
     # pass
-    configParser = ConfigHandler(CONFIGPATH)
-    generateAllDataSets(DATA_SET_PATH, configParser.getIsOnlyDetect())
-    if not os.path.isdir(SPLITTED_DATA_SET_PATH):
-        os.mkdir(SPLITTED_DATA_SET_PATH)
-    split_images()
-    fixIncorrectSplittedCsv()
-    # get_single_insect_image(r'/Users/idoyacovhai/UniversityProject/insects-OD/SplittedDataSets/n1.1-0-0.jpg', 1205,893,143,157)
+    # configParser = ConfigHandler(CONFIGPATH)
+    # generateAllDataSets(DATA_SET_PATH, configParser.getIsOnlyDetect())
+    # if not os.path.isdir(SPLITTED_DATA_SET_PATH):
+    #     os.mkdir(SPLITTED_DATA_SET_PATH)
+    # split_images()
+    # fixIncorrectSplittedCsv()
+    split_train_test_validation(SPLITTED_DATA_SET_PATH)
 
 
 

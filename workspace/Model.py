@@ -70,10 +70,12 @@ class Model:
             gamma=0.1
         )
         numberOfEpochs = self.configHandler.getEpochAmount()
+        doEvluate = self.configHandler.getDoEpochEvaluation()
         for epoch in range(numberOfEpochs):
             engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)
             lr_scheduler.step()
-            engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
+            if doEvluate:
+                engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
 
     def filterOutPuts(self, orig_prediction, iou_threshold = 0.3):
         keep = torchvision.ops.nms(orig_prediction['boxes'], orig_prediction['scores'], iou_threshold)
@@ -108,6 +110,8 @@ class Model:
 
     def calculate_precision_recall(self):
         # Obtain model predictions for test images
+        thresh_hold = self.configHandler.getRetangaleOverlap()
+
         test_images = [self.dataSet_Validation[i][0] for i in range(len(self.dataSet_Validation))]
         test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(len(self.dataSet_Validation))]
         with torch.no_grad():
@@ -115,7 +119,6 @@ class Model:
         true_positives = 0
         false_positives = 0
         false_negatives = 0
-        a = True
         preds = []
         tests = []
         for pred, test in zip(predictions, test_boxes):
@@ -123,7 +126,7 @@ class Model:
                 preds.append((test_box[0].to(torch.int32), test_box[1].to(torch.int32), (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32)))
             for pred_box in pred["boxes"]:
                 tests.append((pred_box[0].to(torch.int32), pred_box[1].to(torch.int32), (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32)))
-        thresh_hold = 150
+
         for pred_1 in preds:
             a = True
             for tests_1 in tests:
