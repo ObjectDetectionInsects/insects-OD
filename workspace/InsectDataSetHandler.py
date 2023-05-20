@@ -5,14 +5,16 @@ from projUtils.utils import *
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 from random import randrange
+from projUtils.configHandler import ConfigHandler, CONFIGPATH
 
 class InsectDataSetHandler(torch.utils.data.Dataset):
-    def __init__(self, files_dir, width, height, onlyDetection = True,  transforms=None):
+    def __init__(self, files_dir, width, height, transforms=None):
+        self.configHandler = ConfigHandler(CONFIGPATH)
         self.transforms = transforms
         self.files_dir = files_dir
         self.height = height
         self.width = width
-        self.onlyDetection = onlyDetection
+        self.onlyDetection = self.configHandler.getIsOnlyDetect()
         self.imgs = [image for image in sorted(os.listdir(files_dir)) if image[-4:] == '.jpg']
         self.classes = [0, 1] #TODO add actual classes based on utils enum
 
@@ -119,9 +121,10 @@ def get_transform(train):
     )
 
 if __name__ == '__main__':
+    configParser = ConfigHandler(CONFIGPATH)
     dataSetDir = SPLITTED_DATA_SET_PATH
     print(dataSetDir)
-    dataSetClass = InsectDataSetHandler(dataSetDir, width=2000, height=2000, onlyDetection = True)
+    dataSetClass = InsectDataSetHandler(dataSetDir, width=2000, height=2000)
     for imageNumber in range(20):
         imageNumbRandom = randrange(1000)
         image, target = dataSetClass[imageNumbRandom]

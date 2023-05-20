@@ -1,0 +1,14 @@
+[Hyper_parameters]
+onlyDetection = True
+epochs = 0
+testSplit = 0.2
+imageBatchSize = 10
+
+
+[ScoreLimits]
+green = 0.9
+blue = 0.8
+
+[OutPutBehavor]
+saveImages = True
+imagesCountToTest = 10

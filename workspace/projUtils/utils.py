@@ -3,7 +3,7 @@ import glob
 from PIL import Image
 from matplotlib import pyplot as plt
 from matplotlib import patches
-
+from workspace.projUtils.configHandler import ConfigHandler, CONFIGPATH
 class Enum(set):
     def __getattr__(self, name):
         if name in self:
@@ -38,6 +38,7 @@ CSV_DELIMETER = ','
 TABLE_HEADER = "parent_image_file_name"
 DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "DataSets")
 SPLITTED_DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../"), "SplittedDataSets")
+OUTPUT_DIR = os.path.join(os.path.abspath(__file__ + "/../../../"), "modelOutPuts")
 SPACE = " "
 IMAGE_EXTENSION = [JPG_EXTENSION, PNG_EXTENSION]
 SINGLE_INSECTS_PATH = "" #TODO add actual path @ido
@@ -197,7 +198,7 @@ def get_single_insect_image(image_path, x, y, w, h):
     a.save(os.path.join(SINGLE_INSECTS_PATH, new_file_name))
 
 
-def plotImageModelOutput(img, target):
+def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName):
     # plot the image and bboxes
     # Bounding boxes are defined as follows: x-min y-min width height
     fig, a = plt.subplots(1, 1)
@@ -207,9 +208,9 @@ def plotImageModelOutput(img, target):
         x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (box[3] - box[1]).cpu().numpy()
         score = score.item()
         color = (score,0,0)
-        if score > 0.8:
+        if score > blueScore:
             color = (0,0,score)
-        if score > 0.9:
+        if score > greenScore:
             color = (0,score,0)
         rect = patches.Rectangle(
             (x, y),
@@ -220,7 +221,12 @@ def plotImageModelOutput(img, target):
         )
         # Draw the bounding box on top of the image
         a.add_patch(rect)
-    plt.show()
+    if savePlot:
+        if not os.path.exists(OUTPUT_DIR):
+            os.mkdir(OUTPUT_DIR)
+        plt.savefig(os.path.join(OUTPUT_DIR, imageName))
+    else:
+        plt.show()
 
 def plotImage(img, target):
     fig, a = plt.subplots(1, 1)
@@ -255,7 +261,8 @@ def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
 
 if __name__ == '__main__':
     # pass
-    generateAllDataSets(DATA_SET_PATH, onlyDetection=True)
+    configParser = ConfigHandler(CONFIGPATH)
+    generateAllDataSets(DATA_SET_PATH, configParser.getIsOnlyDetect())
     if not os.path.isdir(SPLITTED_DATA_SET_PATH):
         os.mkdir(SPLITTED_DATA_SET_PATH)
     split_images()
