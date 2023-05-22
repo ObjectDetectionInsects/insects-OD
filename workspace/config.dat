@@ -1,8 +1,12 @@
+[General]
+makeModelFromScratch = False
+pathToModelToLoad = D:\University\objectDetectionInsects\modelTesting\oriTesting.pkl
+
 [HyperParameters]
 onlyDetection = True
 performEvaluate = True
 performPrecisionRecall = False
-epochs = 1
+epochs = 0
 testSplit = 0.2
 imageBatchSize = 10
 rectangleOverLapLimitInPixels = 150
@@ -15,7 +19,7 @@ blue = 0.8
 
 [OutPutBehavior]
 saveImages = True
-imagesCountToTest = 50
+imagesCountToTest = 10
 imageDPI = 500
-exportModelAsPickle = True
-ModelExportName = Test1
+exportModelAsPickle = False
+ModelExportName = oriTesting

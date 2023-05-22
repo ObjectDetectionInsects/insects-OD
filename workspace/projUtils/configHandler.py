@@ -13,6 +13,17 @@ class ConfigHandler(Singleton):
             print("config does not exist !")
             raise FileNotFoundError
 
+    def isNewModelCreationEnabled(self):
+        if self.config.has_option('General', 'makeModelFromScratch'):
+            return self.config.getboolean('General', 'makeModelFromScratch')
+        else:
+            return True
+
+    def getExistingModelPath(self):
+        if self.config.has_option('General', 'pathToModelToLoad'):
+            return self.config.get('General', 'pathToModelToLoad')
+        else:
+            return True
 
     def getIsOnlyDetect(self):
         if self.config.has_option('HyperParameters', 'onlyDetection'):

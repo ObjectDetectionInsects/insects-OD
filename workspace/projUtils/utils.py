@@ -211,7 +211,7 @@ def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName
     # Bounding boxes are defined as follows: x-min y-min width height
     fig, a = plt.subplots(1, 1)
     fig.set_size_inches(5, 5)
-    # a.imshow(img)
+    a.imshow(img)
     for box,score in zip(target['boxes'],target['scores']):
         x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (box[3] - box[1]).cpu().numpy()
         score = score.item()

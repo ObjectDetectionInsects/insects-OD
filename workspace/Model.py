@@ -55,9 +55,16 @@ class Model:
         )
 
     def getPreTrainedObject(self):
-        model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
-        in_features = model.roi_heads.box_predictor.cls_score.in_features
-        model.roi_heads.box_predictor = FastRCNNPredictor(in_features, self.numOfClasses)
+        if self.configHandler.isNewModelCreationEnabled():
+            model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+            in_features = model.roi_heads.box_predictor.cls_score.in_features
+            model.roi_heads.box_predictor = FastRCNNPredictor(in_features, self.numOfClasses)
+        else:
+            configFilePath = self.configHandler.getExistingModelPath()
+            if os.path.isfile(configFilePath):
+                model = pickle.load(open(configFilePath, 'rb'))
+            else:
+                raise FileNotFoundError
         self.model = model
 
     def train(self):
