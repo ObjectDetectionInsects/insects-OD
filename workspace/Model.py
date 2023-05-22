@@ -8,6 +8,7 @@ import utils, engine
 import warnings
 from random import randrange
 from projUtils.configHandler import ConfigHandler, CONFIGPATH
+import pickle
 warnings.filterwarnings('ignore')
 
 class Model:
@@ -149,3 +150,11 @@ class Model:
         print("True Positives:", true_positives)
         print("False Positives:", false_positives)
         print("True Negatives:", false_negatives)
+
+
+    def export(self):
+        if not os.path.exists(OUTPUT_DIR):
+            os.mkdir(OUTPUT_DIR)
+        modelFileName = "{}.pkl".format(self.configHandler.getExportModelName())
+        modelPath = os.path.join(OUTPUT_DIR, modelFileName)
+        pickle.dump(self.model, open(modelPath, 'wb'))

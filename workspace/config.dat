@@ -13,7 +13,9 @@ splitImageWidthInPixels = 2000
 green = 0.9
 blue = 0.8
 
-[OutPutBehavor]
+[OutPutBehavior]
 saveImages = True
 imagesCountToTest = 50
 imageDPI = 500
+exportModelAsPickle = True
+ModelExportName = Test1

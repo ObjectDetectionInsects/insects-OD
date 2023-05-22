@@ -38,30 +38,17 @@ class ConfigHandler(Singleton):
         else:
             return 10
 
-    def getScoreLimitGreen(self):
-        if self.config.has_option('ScoreLimits', 'green'):
-            return self.config.getfloat('ScoreLimits', 'green')
+    def getImageWidth(self):
+        if self.config.has_option('HyperParameters', 'splitImageWidthInPixels'):
+            return self.config.getint('HyperParameters', 'splitImageWidthInPixels')
         else:
-            return 0.9
+            return 2000
 
-    def getScoreLimitBlue(self):
-        if self.config.has_option('ScoreLimits', 'blue'):
-            return self.config.getfloat('ScoreLimits', 'blue')
+    def getImageHeight(self):
+        if self.config.has_option('HyperParameters', 'splitImageHeightInPixels'):
+            return self.config.getint('HyperParameters', 'splitImageHeightInPixels')
         else:
-            return 0.8
-
-
-    def getSaveImagesEnabled(self):
-        if self.config.has_option('OutPutBehavor', 'saveImages'):
-            return self.config.getboolean('OutPutBehavor', 'saveImages')
-        else:
-            return False
-
-    def getTestImagesAmount(self):
-        if self.config.has_option('OutPutBehavor', 'imagesCountToTest'):
-            return self.config.getint('OutPutBehavor', 'imagesCountToTest')
-        else:
-            return 10
+            return 2000
 
     def getRetangaleOverlap(self):
         if self.config.has_option('HyperParameters', 'rectangleOverLapLimitInPixels'):
@@ -81,24 +68,49 @@ class ConfigHandler(Singleton):
         else:
             return False
 
+    def getScoreLimitGreen(self):
+        if self.config.has_option('ScoreLimits', 'green'):
+            return self.config.getfloat('ScoreLimits', 'green')
+        else:
+            return 0.9
+
+    def getScoreLimitBlue(self):
+        if self.config.has_option('ScoreLimits', 'blue'):
+            return self.config.getfloat('ScoreLimits', 'blue')
+        else:
+            return 0.8
+
+
+    def getSaveImagesEnabled(self):
+        if self.config.has_option('OutPutBehavior', 'saveImages'):
+            return self.config.getboolean('OutPutBehavior', 'saveImages')
+        else:
+            return False
+
+    def getTestImagesAmount(self):
+        if self.config.has_option('OutPutBehavior', 'imagesCountToTest'):
+            return self.config.getint('OutPutBehavior', 'imagesCountToTest')
+        else:
+            return 10
+
     def getImageDPI(self):
-        if self.config.has_option('OutPutBehavor', 'imageDPI'):
-            return self.config.getint('OutPutBehavor', 'imageDPI')
+        if self.config.has_option('OutPutBehavior', 'imageDPI'):
+            return self.config.getint('OutPutBehavior', 'imageDPI')
         else:
             return 500
 
-    def getImageWidth(self):
-        if self.config.has_option('HyperParameters', 'splitImageWidthInPixels'):
-            return self.config.getint('HyperParameters', 'splitImageWidthInPixels')
+    def isExportEnabled(self):
+        if self.config.has_option('OutPutBehavior', 'exportModelAsPickle'):
+            return self.config.getboolean('OutPutBehavior', 'exportModelAsPickle')
         else:
-            return 2000
+            return False
 
-    def getImageHeight(self):
-        if self.config.has_option('HyperParameters', 'splitImageHeightInPixels'):
-            return self.config.getint('HyperParameters', 'splitImageHeightInPixels')
+
+    def getExportModelName(self):
+        if self.config.has_option('OutPutBehavior', 'ModelExportName'):
+            return self.config.get('OutPutBehavior', 'ModelExportName')
         else:
-            return 2000
-
+            return "model"
 
 if __name__ == '__main__':
     #for testing purposes of configHandler object
