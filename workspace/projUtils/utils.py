@@ -26,8 +26,6 @@ SPECIMEN_FAMILIES_STR = Enum(['Curculionidae',
                               'Generalparasitoidwasp',
                               'Unknownfamily'])
 DEFAULT_LABEL = 1
-WIDTH = 2000
-HEIGHT = 2000
 CSV_X_POS = 1
 CSV_Y_POS = 2
 CSV_W_POS = 3
@@ -123,15 +121,18 @@ def get_filename(path):
 
 
 def split_image(image_path):
+    configParser = ConfigHandler(CONFIGPATH)
+    height = configParser.getImageHeight()
+    width = configParser.getImageWidth()
     image_filename = get_filename(image_path)
     image_extension = os.path.basename(image_path).split('.')[-1]
     width_count = 0
     height_count = 0
     img = Image.open(image_path)
     img_width, img_height = img.size
-    for i in range(0, img_height, HEIGHT):
-        for j in range(0, img_width, WIDTH):
-            box = (j, i, j + WIDTH, i + HEIGHT)
+    for i in range(0, img_height, height):
+        for j in range(0, img_width, width):
+            box = (j, i, j + width, i + height)
             a = img.crop(box)
             new_file_name = image_filename + "-{}-{}.".format(width_count, height_count) + image_extension
             a.save(os.path.join(SPLITTED_DATA_SET_PATH, new_file_name))
@@ -141,6 +142,9 @@ def split_image(image_path):
 
 
 def split_csv(csv_path):
+    configParser = ConfigHandler(CONFIGPATH)
+    height = configParser.getImageHeight()
+    width = configParser.getImageWidth()
     csv_filename = get_filename(csv_path)
     with open(csv_path, 'r') as file:
         data = file.readlines()
@@ -148,19 +152,19 @@ def split_csv(csv_path):
             split_line = line.strip('\n').split(',')
             x_pos = int(split_line[CSV_X_POS])
             y_pos = int(split_line[CSV_Y_POS])
-            rational_x_pos = x_pos % WIDTH
-            rational_y_pos = y_pos % HEIGHT
+            rational_x_pos = x_pos % width
+            rational_y_pos = y_pos % height
             w_pos = int(split_line[CSV_W_POS])
             h_pos = int(split_line[CSV_H_POS])
 
-            width_count = int(x_pos / WIDTH)
-            height_count = int(y_pos / HEIGHT)
+            width_count = int(x_pos / width)
+            height_count = int(y_pos / height)
 
             # Fix the frames of a sliced bugs
-            if rational_x_pos + w_pos > WIDTH:
-                split_line[CSV_W_POS] = WIDTH - rational_x_pos
-            if rational_y_pos + h_pos > HEIGHT:
-                split_line[CSV_H_POS] = HEIGHT - rational_y_pos
+            if rational_x_pos + w_pos > width:
+                split_line[CSV_W_POS] = width - rational_x_pos
+            if rational_y_pos + h_pos > height:
+                split_line[CSV_H_POS] = height - rational_y_pos
 
             update_csv_filename = csv_filename + "-{}-{}.".format(width_count, height_count) + CSV_EXTENSION
             update_csv_path = os.path.join(SPLITTED_DATA_SET_PATH, update_csv_filename)
@@ -207,7 +211,7 @@ def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName
     # Bounding boxes are defined as follows: x-min y-min width height
     fig, a = plt.subplots(1, 1)
     fig.set_size_inches(5, 5)
-    a.imshow(img)
+    # a.imshow(img)
     for box,score in zip(target['boxes'],target['scores']):
         x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (box[3] - box[1]).cpu().numpy()
         score = score.item()
@@ -309,7 +313,7 @@ if __name__ == '__main__':
     # generateAllDataSets(DATA_SET_PATH, configParser.getIsOnlyDetect())
     # if not os.path.isdir(SPLITTED_DATA_SET_PATH):
     #     os.mkdir(SPLITTED_DATA_SET_PATH)
-    # split_images()
+    split_images()
     # fixIncorrectSplittedCsv()
     # split_train_test_validation(SPLITTED_DATA_SET_PATH)
 

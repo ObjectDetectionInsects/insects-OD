@@ -6,8 +6,8 @@ epochs = 1
 testSplit = 0.2
 imageBatchSize = 10
 rectangleOverLapLimitInPixels = 150
-splittedImageHeightInPixels = 2000
-splittedImageWidghInPixels = 2000
+splitImageHeightInPixels = 2000
+splitImageWidthInPixels = 2000
 
 [ScoreLimits]
 green = 0.9

@@ -25,7 +25,9 @@ class Model:
         else:
             self.numOfClasses = len(SPECIMEN_FAMILIES_STR) + 1 # We add one for the background
 
-    def createDataSets(self, dataDir, imageDimensionX, imageDimensionY):
+    def createDataSets(self):
+        imageDimensionX = self.configHandler.getImageWidth()
+        imageDimensionY = self.configHandler.getImageHeight()
         self.dataSet = InsectDataSetHandler(TRAIN_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
         self.dataSet_Test = InsectDataSetHandler(TEST_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))
         self.dataSet_Validation = InsectDataSetHandler(VALIDATION_DATA_SET_PATH, imageDimensionX, imageDimensionY, transforms=get_transform(train=False))

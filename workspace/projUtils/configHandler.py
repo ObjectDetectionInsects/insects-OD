@@ -87,6 +87,19 @@ class ConfigHandler(Singleton):
         else:
             return 500
 
+    def getImageWidth(self):
+        if self.config.has_option('HyperParameters', 'splitImageWidthInPixels'):
+            return self.config.getint('HyperParameters', 'splitImageWidthInPixels')
+        else:
+            return 2000
+
+    def getImageHeight(self):
+        if self.config.has_option('HyperParameters', 'splitImageHeightInPixels'):
+            return self.config.getint('HyperParameters', 'splitImageHeightInPixels')
+        else:
+            return 2000
+
+
 if __name__ == '__main__':
     #for testing purposes of configHandler object
     configHandler = ConfigHandler(CONFIGPATH)
