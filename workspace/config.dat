@@ -1,11 +1,13 @@
 [HyperParameters]
 onlyDetection = True
 performEvaluate = True
-performPrecisionRecall = True
-epochs = 3
+performPrecisionRecall = False
+epochs = 1
 testSplit = 0.2
 imageBatchSize = 10
 rectangleOverLapLimitInPixels = 150
+splittedImageHeightInPixels = 2000
+splittedImageWidghInPixels = 2000
 
 [ScoreLimits]
 green = 0.9
@@ -13,4 +15,5 @@ blue = 0.8
 
 [OutPutBehavor]
 saveImages = True
-imagesCountToTest = 10
+imagesCountToTest = 50
+imageDPI = 500

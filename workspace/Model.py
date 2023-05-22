@@ -92,8 +92,9 @@ class Model:
 
     def testOurModel(self, iou_threshold):
         imageAmount = self.configHandler.getTestImagesAmount()
+        validationImages = getValidationImagesAmount()
         for imageNum in range(imageAmount):
-            imageNumberToEval = randrange(100)
+            imageNumberToEval = randrange(validationImages)
             img, target = self.dataSet_Validation[imageNumberToEval]
             self.model.eval()
             with torch.no_grad():
@@ -104,7 +105,8 @@ class Model:
 
             plotImageModelOutput(self.covnvertToPil(img), nms_prediction,
                                  self.configHandler.getScoreLimitGreen(), self.configHandler.getScoreLimitBlue(),
-                                 self.configHandler.getSaveImagesEnabled(), "{}.png".format(imageNum))
+                                 self.configHandler.getSaveImagesEnabled(), "{}.png".format(imageNum),
+                                 self.configHandler.getImageDPI())
         print("finished evaluation")
 
 

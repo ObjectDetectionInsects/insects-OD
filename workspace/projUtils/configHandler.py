@@ -81,6 +81,12 @@ class ConfigHandler(Singleton):
         else:
             return False
 
+    def getImageDPI(self):
+        if self.config.has_option('OutPutBehavor', 'imageDPI'):
+            return self.config.getint('OutPutBehavor', 'imageDPI')
+        else:
+            return 500
+
 if __name__ == '__main__':
     #for testing purposes of configHandler object
     configHandler = ConfigHandler(CONFIGPATH)

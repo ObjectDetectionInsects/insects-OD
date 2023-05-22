@@ -202,7 +202,7 @@ def get_single_insect_image(image_path, x, y, w, h):
     a.save(os.path.join(SINGLE_INSECTS_PATH, new_file_name))
 
 
-def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName):
+def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName, imageDPI):
     # plot the image and bboxes
     # Bounding boxes are defined as follows: x-min y-min width height
     fig, a = plt.subplots(1, 1)
@@ -228,7 +228,7 @@ def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName
     if savePlot:
         if not os.path.exists(OUTPUT_DIR):
             os.mkdir(OUTPUT_DIR)
-        plt.savefig(os.path.join(OUTPUT_DIR, imageName))
+        plt.savefig(os.path.join(OUTPUT_DIR, imageName), dpi= imageDPI)
     else:
         plt.show()
 
@@ -297,15 +297,21 @@ def split_train_test_validation(splittedPath = SPLITTED_DATA_SET_PATH):
             else:
                 os.remove(os.path.join(splittedPath, filename))
 
+
+
+def getValidationImagesAmount():
+    jpg_files = glob.glob(os.path.join(VALIDATION_DATA_SET_PATH, '*{}'.format(JPG_EXTENSION)))
+    return len(jpg_files)
+
 if __name__ == '__main__':
-    # pass
+    pass
     # configParser = ConfigHandler(CONFIGPATH)
     # generateAllDataSets(DATA_SET_PATH, configParser.getIsOnlyDetect())
     # if not os.path.isdir(SPLITTED_DATA_SET_PATH):
     #     os.mkdir(SPLITTED_DATA_SET_PATH)
     # split_images()
     # fixIncorrectSplittedCsv()
-    split_train_test_validation(SPLITTED_DATA_SET_PATH)
+    # split_train_test_validation(SPLITTED_DATA_SET_PATH)
 
 
 
