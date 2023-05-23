@@ -13,6 +13,12 @@ class ConfigHandler(Singleton):
             print("config does not exist !")
             raise FileNotFoundError
 
+    def isOnlyOutput(self):
+        if self.config.has_option('General', 'onlyOutput'):
+            return self.config.getboolean('General', 'onlyOutput')
+        else:
+            return False
+
     def isNewModelCreationEnabled(self):
         if self.config.has_option('General', 'makeModelFromScratch'):
             return self.config.getboolean('General', 'makeModelFromScratch')
@@ -23,7 +29,13 @@ class ConfigHandler(Singleton):
         if self.config.has_option('General', 'pathToModelToLoad'):
             return self.config.get('General', 'pathToModelToLoad')
         else:
-            return True
+            return ""
+
+    def getInputImages(self):
+        if self.config.has_option('General', 'inputImages'):
+            return self.config.get('General', 'inputImages')
+        else:
+            return os.path.join(os.path.abspath(__file__ + "/../../../"), "inputImages")
 
     def getIsOnlyDetect(self):
         if self.config.has_option('HyperParameters', 'onlyDetection'):
@@ -90,7 +102,6 @@ class ConfigHandler(Singleton):
             return self.config.getfloat('ScoreLimits', 'blue')
         else:
             return 0.8
-
 
     def getSaveImagesEnabled(self):
         if self.config.has_option('OutPutBehavior', 'saveImages'):

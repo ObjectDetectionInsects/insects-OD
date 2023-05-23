@@ -1,6 +1,8 @@
 [General]
+onlyOutput = True
 makeModelFromScratch = False
-pathToModelToLoad = D:\University\objectDetectionInsects\modelTesting\oriTesting.pkl
+pathToModelToLoad = /Users/idoyacovhai/UniversityProject/insects-OD/oriTesting.pkl
+inputImages = /Users/idoyacovhai/UniversityProject/insects-OD/inputImages
 
 [HyperParameters]
 onlyDetection = True
