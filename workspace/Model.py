@@ -62,7 +62,10 @@ class Model:
         else:
             configFilePath = self.configHandler.getExistingModelPath()
             if os.path.isfile(configFilePath):
-                model = pickle.load(open(configFilePath, 'rb'))
+                if self.device == torch.device('cpu'):
+                    model = CPU_Unpickler(open(configFilePath, 'rb')).load()
+                else:
+                    model = pickle.load(open(configFilePath, 'rb'))
             else:
                 raise FileNotFoundError
         self.model = model
@@ -165,3 +168,23 @@ class Model:
         modelFileName = "{}.pkl".format(self.configHandler.getExportModelName())
         modelPath = os.path.join(OUTPUT_DIR, modelFileName)
         pickle.dump(self.model, open(modelPath, 'wb'))
+
+    def exportSingleInsect(self):
+        if not os.path.exists(OUTPUT_DIR):
+            os.mkdir(OUTPUT_DIR)
+        inputImagesPath = self.configHandler.getInputImages()
+        imagesPath = os.listdir(inputImagesPath)
+        for image in imagesPath:
+            self.model.eval()
+            image_full_path = os.path.join(inputImagesPath, image)
+            tensor_img = image_to_tensor(image_full_path)
+            with torch.no_grad():
+                prediction = self.model([tensor_img.to(self.device)])[0]
+            for box in prediction['boxes']:
+                x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (
+                            box[3] - box[1]).cpu().numpy()
+                x = int(round(x.min(), 0))
+                y = int(round(y.min(), 0))
+                width = int(round(width.min(), 0))
+                height = int(round(height.min(), 0))
+                get_single_insect_image(image_full_path, x, y, width, height)

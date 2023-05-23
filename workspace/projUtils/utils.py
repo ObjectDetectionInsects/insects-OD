@@ -1,15 +1,29 @@
 import os
 import glob
+import torch
+import pickle
+import io
+from torchvision import transforms
 from PIL import Image
 from matplotlib import pyplot as plt
 from matplotlib import patches
 from workspace.projUtils.configHandler import ConfigHandler, CONFIGPATH
+
 
 class Enum(set):
     def __getattr__(self, name):
         if name in self:
             return name
         return AttributeError
+
+
+class CPU_Unpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if module == 'torch.storage' and name == '_load_from_bytes':
+            return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
+        else:
+            return super().find_class(module, name)
+
 
 def enum(**enums):
     return type('Enum', (), enums)
@@ -43,7 +57,7 @@ VALIDATION_DATA_SET_PATH = os.path.join(os.path.abspath(__file__ + "/../../../Sp
 OUTPUT_DIR = os.path.join(os.path.abspath(__file__ + "/../../../"), "modelOutPuts")
 SPACE = " "
 IMAGE_EXTENSION = [JPG_EXTENSION, PNG_EXTENSION]
-SINGLE_INSECTS_PATH = "" #TODO add actual path @ido
+
 
 def getSpecimenFamily(specimenSting):
     if specimenSting == SPECIMEN_FAMILIES_STR.Curculionidae:
@@ -111,7 +125,7 @@ def generateAllDataSets(dataSetsPath, onlyDetection = True):
             currentDir = os.path.join(dataSetsPath, folder)
             csvFiles = glob.glob(os.path.join(currentDir, '*.{}'.format(CSV_EXTENSION)))
             for csvfile in csvFiles:
-                generateDataSetFromSingleCsv(os.path.join(currentDir, csvfile), currentDir ,onlyDetection)
+                generateDataSetFromSingleCsv(os.path.join(currentDir, csvfile), currentDir, onlyDetection)
     else:
         print("Path given does not exist")
 
@@ -203,7 +217,7 @@ def get_single_insect_image(image_path, x, y, w, h):
     box = (x, y, x + w, y + h)
     a = img.crop(box)
     new_file_name = image_filename + "-insect-{}-{}.".format(x, y) + image_extension
-    a.save(os.path.join(SINGLE_INSECTS_PATH, new_file_name))
+    a.save(os.path.join(OUTPUT_DIR, new_file_name))
 
 
 def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName, imageDPI):
@@ -236,6 +250,7 @@ def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName
     else:
         plt.show()
 
+
 def plotImage(img, target):
     fig, a = plt.subplots(1, 1)
     fig.set_size_inches(5, 5)
@@ -265,6 +280,7 @@ def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
         if not found:
             print("removing file {}".format(jpg_file))
             os.remove(jpg_file)
+
 
 def split_train_test_validation(splittedPath = SPLITTED_DATA_SET_PATH):
     for path in (VALIDATION_DATA_SET_PATH, TEST_DATA_SET_PATH, TRAIN_DATA_SET_PATH):
@@ -302,20 +318,25 @@ def split_train_test_validation(splittedPath = SPLITTED_DATA_SET_PATH):
                 os.remove(os.path.join(splittedPath, filename))
 
 
-
 def getValidationImagesAmount():
     jpg_files = glob.glob(os.path.join(VALIDATION_DATA_SET_PATH, '*{}'.format(JPG_EXTENSION)))
     return len(jpg_files)
 
+
+def image_to_tensor(img_path):
+    tensor_img = Image.open(img_path)
+    convert_tensor = transforms.ToTensor()
+    return convert_tensor(tensor_img)
+
+
 if __name__ == '__main__':
-    pass
     # configParser = ConfigHandler(CONFIGPATH)
     # generateAllDataSets(DATA_SET_PATH, configParser.getIsOnlyDetect())
     # if not os.path.isdir(SPLITTED_DATA_SET_PATH):
     #     os.mkdir(SPLITTED_DATA_SET_PATH)
-    split_images()
+    #split_images()
     # fixIncorrectSplittedCsv()
-    # split_train_test_validation(SPLITTED_DATA_SET_PATH)
+    split_train_test_validation(SPLITTED_DATA_SET_PATH)
 
 
 
