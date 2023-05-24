@@ -125,7 +125,6 @@ class Model:
                                  self.configHandler.getImageDPI())
         print("finished evaluation")
 
-
     def calculate_precision_recall(self):
         # Obtain model predictions for test images
         thresh_hold = self.configHandler.getRetangaleOverlap()
