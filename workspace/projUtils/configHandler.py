@@ -49,6 +49,20 @@ class ConfigHandler(Singleton):
         else:
             return 3
 
+    def getIouThreshold(self):
+        if self.config.has_option('HyperParameters', 'iouThreshold'):
+            return self.config.getfloat('HyperParameters', 'iouThreshold')
+        else:
+            return 0.01
+
+
+    def getPrecisionRecallIOUs(self):
+        if self.config.has_option('HyperParameters', 'precisionRecallIouValues'):
+            listStr = self.config.get('HyperParameters', 'precisionRecallIouValues')
+        else:
+            listStr = "0.01"
+        return [float(val) for val in listStr.split(", ")]
+
     def getTestSplit(self):
         if self.config.has_option('HyperParameters', 'testSplit'):
             return self.config.getfloat('HyperParameters', 'testSplit')
@@ -142,4 +156,6 @@ if __name__ == '__main__':
     # print(configHandler.getSaveImagesAmount())
     # print(configHandler.getTestSplit())
     # print(configHandler.getScoreLimitBlue())
+    test2 = configHandler.getPrecisionRecallIOUs()
+    test1 = configHandler.getIouThreshold()
     print(configHandler.getRetangaleOverlap())

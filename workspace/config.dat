@@ -1,19 +1,21 @@
 [General]
-onlyOutput = True
-makeModelFromScratch = False
-pathToModelToLoad = /Users/idoyacovhai/UniversityProject/insects-OD/oriTesting.pkl
-inputImages = /Users/idoyacovhai/UniversityProject/insects-OD/inputImages
+onlyOutput = False
+makeModelFromScratch = True
+pathToModelToLoad = --
+inputImages = --
 
 [HyperParameters]
 onlyDetection = True
 performEvaluate = True
 performPrecisionRecall = False
-epochs = 0
+precisionRecallIouValues = 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
+epochs = 7
 testSplit = 0.2
 imageBatchSize = 10
 rectangleOverLapLimitInPixels = 150
 splitImageHeightInPixels = 2000
 splitImageWidthInPixels = 2000
+iouThreshold = 0.01
 
 [ScoreLimits]
 green = 0.9
@@ -21,7 +23,7 @@ blue = 0.8
 
 [OutPutBehavior]
 saveImages = True
-imagesCountToTest = 10
+imagesCountToTest = 25
 imageDPI = 500
-exportModelAsPickle = False
-ModelExportName = oriTesting
+exportModelAsPickle = True
+ModelExportName = 7EpochsOri
