@@ -9,7 +9,9 @@ import warnings
 from random import randrange
 from projUtils.configHandler import ConfigHandler, CONFIGPATH
 import pickle
+import matplotlib.pyplot as plt
 warnings.filterwarnings('ignore')
+
 
 class Model:
     def __init__(self):
@@ -126,41 +128,57 @@ class Model:
     def calculate_precision_recall(self):
         # Obtain model predictions for test images
         thresh_hold = self.configHandler.getRetangaleOverlap()
+        print("calculate_precision_recall loading")
+        test_images = [self.dataSet_Validation[i][0] for i in range(0,len(self.dataSet_Validation))]
+        test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(0,len(self.dataSet_Validation))]
+        t=0
+        precision=[]
+        recall=[]
+        actual_boxex = 0
+        iou_threshold_arr = [0.01]
+        for thresh in iou_threshold_arr:
+            print(f"check {t} out of {len(iou_threshold_arr)}")
+            with torch.no_grad():
+                predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0],iou_threshold=thresh) for img in test_images]
+            true_positives = 0
+            false_positives = 0
+            false_negatives = 0
+            preds=([[(pred_box[0].to(torch.int32), pred_box[1].to(torch.int32), (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32)) for pred_box in  pred["boxes"]] for pred in predictions])
+            tests=([[(test_box[0].to(torch.int32), test_box[1].to(torch.int32), (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32)) for test_box in test] for test in test_boxes])
+            for pred_1,test_1 in zip(preds,tests):
+                for pred_2 in pred_1:
+                    a = True
+                    for tests_2 in test_1:
+                        if a & (abs(pred_2[0] - tests_2[0]) <= thresh_hold) & (
+                                abs(pred_2[1] - tests_2[1]) <= thresh_hold):
+                            true_positives += 1
+                            a = False
+                    if a:
+                        false_positives += 1
+                for tests_2 in test_1:
+                    if t ==0:
+                        actual_boxex+=1
+                    a = True
+                    for pred_2 in pred_1:
+                        if a & (abs(pred_2[0] - tests_2[0]) <= thresh_hold) & (
+                                abs(pred_2[1] - tests_2[1]) <= thresh_hold):
+                            a = False
+                    if a:
+                        false_negatives +=1
+            t+=1
+            precision.append((true_positives/(true_positives + false_positives)))
+            recall.append((true_positives/(true_positives + false_negatives)))
+            print("True Positives:", true_positives)
+            print("False Positives:", false_positives)
+            print("False Negatives:", false_negatives)
 
-        test_images = [self.dataSet_Validation[i][0] for i in range(len(self.dataSet_Validation))]
-        test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(len(self.dataSet_Validation))]
-        with torch.no_grad():
-            predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0]) for img in test_images]
-        true_positives = 0
-        false_positives = 0
-        false_negatives = 0
-        preds = []
-        tests = []
-        for pred, test in zip(predictions, test_boxes):
-            for test_box in test:
-                preds.append((test_box[0].to(torch.int32), test_box[1].to(torch.int32), (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32)))
-            for pred_box in pred["boxes"]:
-                tests.append((pred_box[0].to(torch.int32), pred_box[1].to(torch.int32), (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32)))
-
-        for pred_1 in preds:
-            a = True
-            for tests_1 in tests:
-                if a & (abs(pred_1[0] - tests_1[0]) <= thresh_hold) & (abs(pred_1[1] - tests_1[1]) <= thresh_hold) & (abs(pred_1[2] - tests_1[2]) <= thresh_hold) & (abs(pred_1[3] - tests_1[3]) <= thresh_hold):
-                    true_positives+=1
-                    a = False
-            if a:
-                false_positives +=1
-        for tests_1 in tests:
-            a = True
-            for pred_1 in preds:
-                if a & (abs(pred_1[0] - tests_1[0]) <= thresh_hold) & (abs(pred_1[1] - tests_1[1]) <= thresh_hold) & (abs(pred_1[2] - tests_1[2]) <= thresh_hold) & (abs(pred_1[3] - tests_1[3]) <= thresh_hold):
-                    a = False
-            if a:
-                false_negatives +=1
-        print("True Positives:", true_positives)
-        print("False Positives:", false_positives)
-        print("True Negatives:", false_negatives)
-
+        print("actual boxex", actual_boxex)
+        print("calculate_precision_recall finished")
+        plt.plot(precision, recall)
+        plt.xlabel('Precision')
+        plt.ylabel('Recall')
+        plt.title('Precision-Recall Curve')
+        plt.show()
 
     def export(self):
         if not os.path.exists(OUTPUT_DIR):
