@@ -181,7 +181,8 @@ class Model:
         plt.xlabel('Precision')
         plt.ylabel('Recall')
         plt.title('Precision-Recall Curve')
-        plt.show()
+        print("Precision recall values are {} and {}".format(precision, recall))
+        plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
 
     def export(self):
         if not os.path.exists(OUTPUT_DIR):
