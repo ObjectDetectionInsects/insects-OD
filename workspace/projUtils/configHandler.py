@@ -55,13 +55,23 @@ class ConfigHandler(Singleton):
         else:
             return 0.01
 
-
-    def getPrecisionRecallIOUs(self):
-        if self.config.has_option('HyperParameters', 'precisionRecallIouValues'):
-            listStr = self.config.get('HyperParameters', 'precisionRecallIouValues')
+    def getPrecisionRecallMaxIOU(self):
+        if self.config.has_option('HyperParameters', 'precisionRecallIouMax'):
+            return min(1.0, self.config.getfloat('HyperParameters', 'precisionRecallIouMax'))
         else:
-            listStr = "0.01"
-        return [float(val) for val in listStr.split(", ")]
+            return 1.0
+
+    def getPrecisionRecallMinIOU(self):
+        if self.config.has_option('HyperParameters', 'precisionRecallIouMin'):
+            return max(0.01, self.config.getfloat('HyperParameters', 'precisionRecallIouMin'))
+        else:
+            return 0.01
+
+    def getPrecisionRecallIouSteps(self):
+        if self.config.has_option('HyperParameters', 'precisionRecallSteps'):
+            return self.config.getfloat('HyperParameters', 'precisionRecallSteps')
+        else:
+            return 0.1
 
     def getTestSplit(self):
         if self.config.has_option('HyperParameters', 'testSplit'):

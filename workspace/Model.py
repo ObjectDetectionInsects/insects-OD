@@ -126,9 +126,13 @@ class Model:
         print("finished evaluation")
 
     def calculate_precision_recall(self):
-        # Obtain model predictions for test images
+        minVal = self.configHandler.getPrecisionRecallMinIOU()
+        maxVal = self.configHandler.getPrecisionRecallMaxIOU()
+        step = self.configHandler.getPrecisionRecallIouSteps()
         thresh_hold = self.configHandler.getRetangaleOverlap()
-        iou_threshold_arr = self.configHandler.getPrecisionRecallIOUs()
+        iou_threshold_arr = getIOUArray(minVal, maxVal, step)
+
+        print("iou values tested are: {}".format(iou_threshold_arr))
         print("calculate_precision_recall loading")
         test_images = [self.dataSet_Validation[i][0] for i in range(0,len(self.dataSet_Validation))]
         test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(0,len(self.dataSet_Validation))]

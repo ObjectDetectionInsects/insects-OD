@@ -328,6 +328,19 @@ def image_to_tensor(img_path):
     convert_tensor = transforms.ToTensor()
     return convert_tensor(tensor_img)
 
+def getIOUArray(minVal, maxVal, step):
+    arrayOfSteps = []
+    currentVal = minVal
+
+    while currentVal <= maxVal:
+        arrayOfSteps.append(currentVal)
+        currentVal += step
+
+    if arrayOfSteps[-1] < maxVal:
+        arrayOfSteps.append(maxVal)
+
+    return arrayOfSteps
+
 
 if __name__ == '__main__':
     # configParser = ConfigHandler(CONFIGPATH)
