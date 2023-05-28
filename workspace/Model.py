@@ -86,26 +86,11 @@ class Model:
         )
         numberOfEpochs = self.configHandler.getEpochAmount()
         doEvluate = self.configHandler.getDoEpochEvaluation()
-        accuracy = []
-        epochs = []
         for epoch in range(numberOfEpochs):
             engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)
             lr_scheduler.step()
             if doEvluate:
                 engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
-                accuracy.append(self.calculate_precision_recall())
-                epochs.append(epoch)
-        # Plotting the graph
-        plt.plot(epochs, accuracy, marker='o')
-        plt.xlabel('Epochs')
-        plt.ylabel('Accuracy')
-        plt.title('Accuracy vs. Epochs')
-        plt.grid(True)
-
-        # Displaying the graph
-        plt.show()
-
-
 
     def filterOutPuts(self, orig_prediction, iou_threshold = 0.3):
         keep = torchvision.ops.nms(orig_prediction['boxes'], orig_prediction['scores'], iou_threshold)
@@ -120,8 +105,9 @@ class Model:
     def covnvertToPil(self, image):
         return torchtrans.ToPILImage()(image).convert('RGB')
 
-    def testOurModel(self, iou_threshold):
+    def testOurModel(self):
         imageAmount = self.configHandler.getTestImagesAmount()
+        iou_threshold = self.configHandler.getIouThreshold()
         validationImages = getValidationImagesAmount()
         for imageNum in range(imageAmount):
             imageNumberToEval = randrange(validationImages)
@@ -141,11 +127,16 @@ class Model:
 
 
     def calculate_precision_recall(self):
-        # Obtain model predictions for test images
+        minVal = self.configHandler.getPrecisionRecallMinIOU()
+        maxVal = self.configHandler.getPrecisionRecallMaxIOU()
+        step = self.configHandler.getPrecisionRecallIouSteps()
         thresh_hold = self.configHandler.getRetangaleOverlap()
+        iou_threshold_arr = getIOUArray(minVal, maxVal, step)
+
+        print("iou values tested are: {}".format(iou_threshold_arr))
         print("calculate_precision_recall loading")
-        test_images = [self.dataSet[i][0] for i in range(0,len(self.dataSet))]
-        test_boxes = [self.dataSet[i][1]["boxes"] for i in range(0,len(self.dataSet))]
+        test_images = [self.dataSet_Validation[i][0] for i in range(0,len(self.dataSet_Validation))]
+        test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(0,len(self.dataSet_Validation))]
         t=0
         precision=[]
         recall=[]
@@ -155,12 +146,14 @@ class Model:
             print(f"check {t} out of {len(iou_threshold_arr)}")
             with torch.no_grad():
                 predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0],iou_threshold=thresh) for img in test_images]
-            true_positives = 0
-            false_positives = 0
-            false_negatives = 0
-            true_positives_arr = []
-            preds=([[(pred_box[0].to(torch.int32), pred_box[1].to(torch.int32), (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32)) for pred_box in  pred["boxes"]] for pred in predictions])
-            tests=([[(test_box[0].to(torch.int32), test_box[1].to(torch.int32), (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32)) for test_box in test] for test in test_boxes])
+            true_positives, false_positives, false_negatives = 0, 0, 0
+            # true_positives_arr = []
+            preds = ([[(pred_box[0].to(torch.int32), pred_box[1].to(torch.int32),
+                        (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32))
+                       for pred_box in pred["boxes"]] for pred in predictions])
+            tests = ([[(test_box[0].to(torch.int32), test_box[1].to(torch.int32),
+                        (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32))
+                       for test_box in test] for test in test_boxes])
             for pred_1,test_1 in zip(preds,tests):
                 for pred_2 in pred_1:
                     a = True
@@ -182,21 +175,23 @@ class Model:
                     if a:
                         false_negatives +=1
             t+=1
-            true_positives_arr.append(true_positives)
+            # true_positives_arr.append(true_positives)
             precision.append((true_positives/(true_positives + false_positives)))
             recall.append((true_positives/(true_positives + false_negatives)))
             print("True Positives:", true_positives)
             print("False Positives:", false_positives)
             print("False Negatives:", false_negatives)
 
-        # print("actual boxex", actual_boxex)
-        # print("calculate_precision_recall finished")
-        # plt.plot(precision, recall)
-        # plt.xlabel('Precision')
-        # plt.ylabel('Recall')
-        # plt.title('Precision-Recall Curve')
-        # plt.show()
-        return (true_positives_arr[0]/actual_boxex)
+        print("actual boxex", actual_boxex)
+        print("calculate_precision_recall finished")
+        plt.plot(precision, recall)
+        plt.xlabel('Precision')
+        plt.ylabel('Recall')
+        plt.title('Precision-Recall Curve')
+        print("Precision recall values are {} and {}".format(precision, recall))
+        plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
+        # return (true_positives_arr[0]/actual_boxex)
+
     def export(self):
         if not os.path.exists(OUTPUT_DIR):
             os.mkdir(OUTPUT_DIR)
