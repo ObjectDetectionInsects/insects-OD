@@ -9,7 +9,7 @@ if __name__ == '__main__':
         Model.createDataSets()
         Model.splitAndCreateDataLoaders()
         Model.train()
-        Model.testOurModel(0.01)
+        # Model.testOurModel(0.01)
         if configObject.isExportEnabled():
             Model.export()
         if configObject.getDoPrecissionRecall():

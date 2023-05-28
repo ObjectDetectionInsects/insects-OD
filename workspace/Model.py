@@ -91,6 +91,8 @@ class Model:
         for epoch in range(numberOfEpochs):
             engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)
             lr_scheduler.step()
+            running_loss = evaluate(self.model(),self.dataLoader)
+            print(f"epoch - {epoch} running_loss - {running_loss}")
             if doEvluate:
                 engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
                 accuracy.append(self.calculate_precision_recall())
@@ -105,6 +107,30 @@ class Model:
         # Displaying the graph
         plt.show()
 
+    def evaluate(model, dataloader):
+        model.eval()
+
+        running_loss = 0.0
+        loss_value = 0.0
+
+        for images, targets in dataloader:
+            images = list(img.to(device) for img in images)
+            targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+
+            with torch.no_grad():
+                loss_dict = model(images)
+
+                # this returned object from the model:
+                # len is 4 (so index here), which is probably because of the size of the batch
+                # loss_dict[index]['boxes']
+                # loss_dict[index]['labels']
+                # loss_dict[index]['scores']
+                for x in range(1):
+                    loss_value += sum(loss for loss in loss_dict[x]['scores'])
+
+            running_loss += loss_value
+
+        return running_loss
 
 
     def filterOutPuts(self, orig_prediction, iou_threshold = 0.3):
