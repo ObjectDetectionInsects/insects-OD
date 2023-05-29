@@ -220,29 +220,43 @@ def get_single_insect_image(image_path, x, y, w, h):
     a.save(os.path.join(OUTPUT_DIR, new_file_name))
 
 
-def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName, imageDPI):
+def filterLowGradeBoxes(predictions, boxThreshold):
+    filtered_predictions = []
+
+    for pred in predictions:
+        filtered_boxes = []
+        for pred_box, pred_score in zip(pred["boxes"], pred["scores"]):
+            if pred_score >= boxThreshold:
+                filtered_boxes.append(pred_box)
+        if filtered_boxes:
+            pred["boxes"] = filtered_boxes
+            filtered_predictions.append(pred)
+    return filtered_predictions
+
+def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName, imageDPI, minScore):
     # plot the image and bboxes
     # Bounding boxes are defined as follows: x-min y-min width height
     fig, a = plt.subplots(1, 1)
     fig.set_size_inches(5, 5)
     a.imshow(img)
     for box,score in zip(target['boxes'],target['scores']):
-        x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (box[3] - box[1]).cpu().numpy()
-        score = score.item()
-        color = (score,0,0)
-        if score > blueScore:
-            color = (0,0,score)
-        if score > greenScore:
-            color = (0,score,0)
-        rect = patches.Rectangle(
-            (x, y),
-            width, height,
-            linewidth=2,
-            edgecolor=color,
-            facecolor='none'
-        )
-        # Draw the bounding box on top of the image
-        a.add_patch(rect)
+        if score >= minScore:
+            x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (box[3] - box[1]).cpu().numpy()
+            score = score.item()
+            color = (score,0,0)
+            if score > blueScore:
+                color = (0,0,score)
+            if score > greenScore:
+                color = (0,score,0)
+            rect = patches.Rectangle(
+                (x, y),
+                width, height,
+                linewidth=2,
+                edgecolor=color,
+                facecolor='none'
+            )
+            # Draw the bounding box on top of the image
+            a.add_patch(rect)
     if savePlot:
         if not os.path.exists(OUTPUT_DIR):
             os.mkdir(OUTPUT_DIR)

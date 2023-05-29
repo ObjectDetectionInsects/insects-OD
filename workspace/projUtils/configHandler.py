@@ -127,6 +127,12 @@ class ConfigHandler(Singleton):
         else:
             return 0.8
 
+    def getBoxScoreLimit(self):
+        if self.config.has_option('ScoreLimits', 'outPutScoreLimit'):
+            return self.config.getfloat('ScoreLimits', 'outPutScoreLimit')
+        else:
+            return 0.7
+
     def getSaveImagesEnabled(self):
         if self.config.has_option('OutPutBehavior', 'saveImages'):
             return self.config.getboolean('OutPutBehavior', 'saveImages')

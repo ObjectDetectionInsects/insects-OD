@@ -109,6 +109,8 @@ class Model:
         imageAmount = self.configHandler.getTestImagesAmount()
         iou_threshold = self.configHandler.getIouThreshold()
         validationImages = getValidationImagesAmount()
+        boxThreshold = self.configHandler.getBoxScoreLimit()
+
         for imageNum in range(imageAmount):
             imageNumberToEval = randrange(validationImages)
             img, target = self.dataSet_Validation[imageNumberToEval]
@@ -122,7 +124,7 @@ class Model:
             plotImageModelOutput(self.covnvertToPil(img), nms_prediction,
                                  self.configHandler.getScoreLimitGreen(), self.configHandler.getScoreLimitBlue(),
                                  self.configHandler.getSaveImagesEnabled(), "{}.png".format(imageNum),
-                                 self.configHandler.getImageDPI())
+                                 self.configHandler.getImageDPI(), boxThreshold)
         print("finished evaluation")
 
     def calculate_precision_recall(self):
@@ -131,6 +133,7 @@ class Model:
         step = self.configHandler.getPrecisionRecallIouSteps()
         thresh_hold = self.configHandler.getRetangaleOverlap()
         iou_threshold_arr = getIOUArray(minVal, maxVal, step)
+        boxThreshold = self.configHandler.getBoxScoreLimit()
 
         print("iou values tested are: {}".format(iou_threshold_arr))
         print("calculate_precision_recall loading")
@@ -144,6 +147,7 @@ class Model:
             print(f"check {t} out of {len(iou_threshold_arr)}")
             with torch.no_grad():
                 predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0],iou_threshold=thresh) for img in test_images]
+            predictions = filterLowGradeBoxes(predictions, boxThreshold)
             true_positives, false_positives, false_negatives = 0, 0, 0
             preds = ([[(pred_box[0].to(torch.int32), pred_box[1].to(torch.int32),
                         (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32))
@@ -180,9 +184,9 @@ class Model:
 
         print("actual boxex", actual_boxex)
         print("calculate_precision_recall finished")
-        plt.plot(precision, recall)
-        plt.xlabel('Precision')
-        plt.ylabel('Recall')
+        plt.plot(recall, precision)
+        plt.xlabel('recall')
+        plt.ylabel('precision')
         plt.title('Precision-Recall Curve')
         print("Precision recall values are {} and {}".format(precision, recall))
         plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
@@ -199,17 +203,19 @@ class Model:
             os.mkdir(OUTPUT_DIR)
         inputImagesPath = self.configHandler.getInputImages()
         imagesPath = os.listdir(inputImagesPath)
+        minBoxScore = self.configHandler.getBoxScoreLimit()
         for image in imagesPath:
             self.model.eval()
             image_full_path = os.path.join(inputImagesPath, image)
             tensor_img = image_to_tensor(image_full_path)
             with torch.no_grad():
                 prediction = self.model([tensor_img.to(self.device)])[0]
-            for box in prediction['boxes']:
+            for box,score in zip(prediction['boxes'],prediction['scores']):
                 x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (
                             box[3] - box[1]).cpu().numpy()
                 x = int(round(x.min(), 0))
                 y = int(round(y.min(), 0))
                 width = int(round(width.min(), 0))
                 height = int(round(height.min(), 0))
-                get_single_insect_image(image_full_path, x, y, width, height)
+                if score >= minBoxScore:
+                    get_single_insect_image(image_full_path, x, y, width, height)
