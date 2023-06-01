@@ -194,6 +194,49 @@ class Model:
         print("Precision recall values are {} and {}".format(precision, recall))
         plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
 
+    def precisionRecall(self):
+        minConfidence = self.configHandler.getPrecisionRecallMinConfidence()
+        maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
+        step = self.configHandler.getPrecisionRecallConfidenceSteps()
+        confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
+        iou = self.configHandler.getIouThreshold()
+
+        precisions = []
+        recalls = []
+
+        validationImages = [self.dataSet_Validation[imageNum][0] for imageNum in range(0,len(self.dataSet_Validation))]
+        actualBoxes = [self.dataSet_Validation[imageNum][1]["boxes"] for imageNum in range(0,len(self.dataSet_Validation))]
+        with torch.no_grad():
+            predictions = [self.model([img.to(self.device)])[0] for img in
+                           validationImages]
+
+        for confidence in confidencesArray:
+            filteredPredictions = filterLowGradeBoxes(predictions, confidence)
+            tp, fp, fn = 0, 0, 0
+            for prediction, actual in zip(filteredPredictions, actualBoxes):
+                tpImage, fpImage, fnImage = getOverlapResults(prediction, actual, iou)
+                tp += tpImage
+                fp += fpImage
+                fn += fnImage
+            print("tp:{}, fp:{}, fn:{}".format(tp, fp, fn))
+            try:
+                precision = tp/(tp+fp)
+            except ZeroDivisionError:
+                precision = 0.0
+            try:
+                recall = tp/(tp+fn)
+            except ZeroDivisionError:
+                recall = 0.0
+
+            precisions.append(precision)
+            recalls.append(recall)
+
+        plt.plot(recalls, precisions)
+        plt.xlabel('recall')
+        plt.ylabel('precision')
+        plt.title('Precision-Recall Curve')
+        print("Precision recall values are {} and {}".format(precisions, recalls))
+        plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
     def export(self):
         if not os.path.exists(OUTPUT_DIR):
             os.mkdir(OUTPUT_DIR)

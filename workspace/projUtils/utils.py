@@ -3,6 +3,7 @@ import glob
 import torch
 import pickle
 import io
+import numpy as np
 from torchvision import transforms
 from PIL import Image
 from matplotlib import pyplot as plt
@@ -75,12 +76,14 @@ def getSpecimenFamily(specimenSting):
     else:
         print("unsupported type {}".format(specimenSting))
 
+
 def dataIsFull(splittedLine, onlyDetction):
     if not onlyDetction:
         return not splittedLine[18] == ""
     if splittedLine[1] == "" or splittedLine[2] == "" or splittedLine[3] == "" or splittedLine[4] == "":
         return False
     return True
+
 
 def generateDataSetFromSingleCsv(csvFilePath, saveLocation ,onlyDetection = True):
     newCsvFileNames = []
@@ -233,6 +236,7 @@ def filterLowGradeBoxes(predictions, boxThreshold):
             filtered_predictions.append(pred)
     return filtered_predictions
 
+
 def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName, imageDPI, minScore):
     # plot the image and bboxes
     # Bounding boxes are defined as follows: x-min y-min width height
@@ -265,7 +269,7 @@ def plotImageModelOutput(img, target, greenScore, blueScore, savePlot, imageName
         plt.show()
 
 
-def plotImage(img, target):
+def plotImage(img, target, imageName):
     fig, a = plt.subplots(1, 1)
     fig.set_size_inches(5, 5)
     a.imshow(img)
@@ -281,6 +285,10 @@ def plotImage(img, target):
         # Draw the bounding box on top of the image
         a.add_patch(rect)
     plt.show()
+    if not os.path.exists(OUTPUT_DIR):
+        os.mkdir(OUTPUT_DIR)
+    plt.savefig(os.path.join(OUTPUT_DIR, imageName), dpi=500)
+
 
 #TODO this is a temporary fix! for Ori testing. a better fix to be made.
 def fixIncorrectSplittedCsv(splittedPath = SPLITTED_DATA_SET_PATH):
@@ -342,6 +350,7 @@ def image_to_tensor(img_path):
     convert_tensor = transforms.ToTensor()
     return convert_tensor(tensor_img)
 
+
 def getConfidenceArray(minVal, maxVal, step):
     arrayOfSteps = []
     currentVal = round(minVal, 2)
@@ -356,6 +365,54 @@ def getConfidenceArray(minVal, maxVal, step):
 
     return arrayOfSteps
 
+
+def calculateIOU(predictionBox, actualBox):
+    x_topleft_gt, y_topleft_gt, x_bottomright_gt, y_bottomright_gt= actualBox.numpy()
+    x_topleft_p, y_topleft_p, x_bottomright_p, y_bottomright_p= predictionBox.data.cpu().numpy()
+
+    GT_bbox_area = (x_bottomright_gt - x_topleft_gt + 1) * (y_bottomright_gt - y_topleft_gt + 1)
+    Pred_bbox_area =(x_bottomright_p - x_topleft_p + 1 ) * ( y_bottomright_p - y_topleft_p + 1)
+
+    x_top_left = np.max([x_topleft_gt, x_topleft_p])
+    y_top_left = np.max([y_topleft_gt, y_topleft_p])
+    x_bottom_right = np.min([x_bottomright_gt, x_bottomright_p])
+    y_bottom_right = np.min([y_bottomright_gt, y_bottomright_p])
+
+    intersection_area = (x_bottom_right - x_top_left + 1) * (y_bottom_right - y_top_left + 1)
+
+    union_area = (GT_bbox_area + Pred_bbox_area - intersection_area)
+
+    return intersection_area / union_area
+
+def getOverlapResults(prediction, actualBoxes, iouThresh):
+    gt_idx_thr=[]
+    pred_idx_thr=[]
+    ious=[]
+
+    for indexPredBox, predBox in enumerate(prediction['boxes']):
+        for indexActBox, actBox in enumerate(actualBoxes):
+            iou = calculateIOU(predBox, actBox)
+            if iou >iouThresh:
+                gt_idx_thr.append(indexActBox)
+                pred_idx_thr.append(indexPredBox)
+                ious.append(iou)
+    iou_sort = np.argsort(ious)[::1]
+    if len(iou_sort) == 0:
+        return 0, 0, 0
+    else:
+        gt_match_idx=[]
+        pred_match_idx=[]
+        for idx in iou_sort:
+            gt_idx=gt_idx_thr[idx]
+            pr_idx= pred_idx_thr[idx]
+            # If the boxes are unmatched, add them to matches
+            if(gt_idx not in gt_match_idx) and (pr_idx not in pred_match_idx):
+                gt_match_idx.append(gt_idx)
+                pred_match_idx.append(pr_idx)
+        tp = len(gt_match_idx)
+        fp = len(prediction['boxes']) - len(pred_match_idx)
+        fn = len(actualBoxes) - len(gt_match_idx)
+    return tp, fp, fn
 
 if __name__ == '__main__':
     # configParser = ConfigHandler(CONFIGPATH)
