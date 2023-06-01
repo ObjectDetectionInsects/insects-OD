@@ -128,30 +128,33 @@ class Model:
         print("finished evaluation")
 
     def calculate_precision_recall(self):
-        minVal = self.configHandler.getPrecisionRecallMinIOU()
-        maxVal = self.configHandler.getPrecisionRecallMaxIOU()
-        step = self.configHandler.getPrecisionRecallIouSteps()
+        minConfidence = self.configHandler.getPrecisionRecallMinConfidence()
+        maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
+        step = self.configHandler.getPrecisionRecallConfidenceSteps()
         thresh_hold = self.configHandler.getRetangaleOverlap()
-        iou_threshold_arr = getIOUArray(minVal, maxVal, step)
-        boxThreshold = self.configHandler.getBoxScoreLimit()
+        confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
+        iou = self.configHandler.getIouThreshold()
 
-        print("iou values tested are: {}".format(iou_threshold_arr))
+        print("confidence values tested are: {}".format(confidencesArray))
         print("calculate_precision_recall loading")
+
         test_images = [self.dataSet_Validation[i][0] for i in range(0,len(self.dataSet_Validation))]
         test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(0,len(self.dataSet_Validation))]
         t=0
         precision=[]
         recall=[]
         actual_boxex = 0
-        for thresh in iou_threshold_arr:
-            print(f"check {t} out of {len(iou_threshold_arr)}")
-            with torch.no_grad():
-                predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0],iou_threshold=thresh) for img in test_images]
-            predictions = filterLowGradeBoxes(predictions, boxThreshold)
+        with torch.no_grad():
+            predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0], iou_threshold=iou) for img in
+                           test_images]
+
+        for confidence in confidencesArray:
+            print(f"check {t} out of {len(confidencesArray)}")
+            filteredPredictions = filterLowGradeBoxes(predictions, confidence)
             true_positives, false_positives, false_negatives = 0, 0, 0
             preds = ([[(pred_box[0].to(torch.int32), pred_box[1].to(torch.int32),
                         (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32))
-                       for pred_box in pred["boxes"]] for pred in predictions])
+                       for pred_box in pred["boxes"]] for pred in filteredPredictions])
             tests = ([[(test_box[0].to(torch.int32), test_box[1].to(torch.int32),
                         (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32))
                        for test_box in test] for test in test_boxes])

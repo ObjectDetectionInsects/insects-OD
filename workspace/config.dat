@@ -1,32 +1,33 @@
 [General]
 onlyOutput = False
-makeModelFromScratch = True
-pathToModelToLoad = D:\University\objectDetectionInsects\modelTesting\7EpochsOri.pkl
+makeModelFromScratch = False
+pathToModelToLoad = D:\University\objectDetectionInsects\modelTesting\10_Epochs_Ori.pkl
 inputImages = D:\University\objectDetectionInsects\inputTesting
 
 [HyperParameters]
 onlyDetection = True
 performEvaluate = True
-performPrecisionRecall = False
-precisionRecallIouMax = 1.0
-precisionRecallIouMin = 0.01
-getPrecisionRecallIouSteps = 0.1
-epochs = 10
-testSplit = 0.2
+epochs = 0
 imageBatchSize = 10
 rectangleOverLapLimitInPixels = 150
 splitImageHeightInPixels = 2000
 splitImageWidthInPixels = 2000
 iouThreshold = 0.01
 
+[PrecisionRecall]
+performPrecisionRecall = True
+precisionRecallMaxConfidence = 0.9
+precisionRecallMinConfidence = 0.1
+getPrecisionRecallConfidenceSteps = 0.1
+
 [ScoreLimits]
 green = 0.9
 blue = 0.8
-outPutScoreLimit = 0.85
+minConfidence = 0.1
 
 [OutPutBehavior]
-saveImages = True
-imagesCountToTest = 10
+saveImages = False
+imagesCountToTest = 0
 imageDPI = 500
-exportModelAsPickle = True
+exportModelAsPickle = False
 ModelExportName = 10_Epochs_Ori

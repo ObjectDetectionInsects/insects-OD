@@ -342,13 +342,14 @@ def image_to_tensor(img_path):
     convert_tensor = transforms.ToTensor()
     return convert_tensor(tensor_img)
 
-def getIOUArray(minVal, maxVal, step):
+def getConfidenceArray(minVal, maxVal, step):
     arrayOfSteps = []
-    currentVal = minVal
+    currentVal = round(minVal, 2)
 
     while currentVal <= maxVal:
         arrayOfSteps.append(currentVal)
         currentVal += step
+        currentVal = round(currentVal, 2)
 
     if arrayOfSteps[-1] < maxVal:
         arrayOfSteps.append(maxVal)
