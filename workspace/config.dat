@@ -1,31 +1,33 @@
 [General]
 onlyOutput = False
 makeModelFromScratch = True
-pathToModelToLoad = C:\Users\koren\Desktop\insects_vison_project\git_OD\insects-OD\workspace\oriTesting.pkl
-inputImages = --
+pathToModelToLoad = D:\University\objectDetectionInsects\modelTesting\10_Epochs_Ori.pkl
+inputImages = D:\University\objectDetectionInsects\inputTesting
 
 [HyperParameters]
 onlyDetection = True
 performEvaluate = True
-performPrecisionRecall = False
-precisionRecallIouMax = 1.0
-precisionRecallIouMin = 0.01
-getPrecisionRecallIouSteps = 0.1
-epochs = 1
-testSplit = 0.2
+epochs = 8
 imageBatchSize = 1
 rectangleOverLapLimitInPixels = 150
-splitImageHeightInPixels = 2000
 splitImageWidthInPixels = 2000
-iouThreshold = 0.01
+splitImageHeightInPixels = 2000
+iouThreshold = 0.1
+
+[PrecisionRecall]
+performPrecisionRecall = False
+precisionRecallMaxConfidence = 0.9
+precisionRecallMinConfidence = 0.6
+getPrecisionRecallConfidenceSteps = 0.1
 
 [ScoreLimits]
 green = 0.9
 blue = 0.8
+minConfidence = 0.1
 
 [OutPutBehavior]
-saveImages = False
-imagesCountToTest = 10
+saveImages = True
+imagesCountToTest = 0
 imageDPI = 500
 exportModelAsPickle = False
-ModelExportName = oriTesting
+ModelExportName = 10_Epochs_Ori

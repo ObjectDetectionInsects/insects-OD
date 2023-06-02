@@ -14,6 +14,8 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
+    # metric_logger.meters
+    lf_values = []
     header = 'Epoch: [{}]'.format(epoch)
 
     lr_scheduler = None
@@ -51,7 +53,13 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
-        return
+    lf_values.append([[metric_logger.meters["lr"].avg],[metric_logger.meters["loss_classifier"].avg],[metric_logger.meters["loss_box_reg"].avg]])
+    print(f' lr -- {metric_logger.meters["lr"].avg}')
+    print(f' lr -- {metric_logger.meters["loss_classifier"].avg}')
+    print(f' lr -- {metric_logger.meters["loss_box_reg"].avg}')
+    print()
+    return(lf_values)
+
 
 
 def _get_iou_types(model):

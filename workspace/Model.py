@@ -41,7 +41,7 @@ class Model:
         batch_size = self.configHandler.getImageBatchSize()
         # define training and validation data loaders
         self.dataLoader = torch.utils.data.DataLoader(
-            self.dataSet_Validation,
+            self.dataSet_Test,
             batch_size=batch_size,
             shuffle=True,
             num_workers=4,
@@ -72,27 +72,6 @@ class Model:
                 raise FileNotFoundError
         self.model = model
 
-    def evaluate(self):
-        self.model.eval()
-
-        running_loss = 0.0
-        loss_value = 0.0
-
-        for images, targets in self.dataLoader:
-            images = list(img.to(self.device) for img in images)
-            target = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
-            with torch.no_grad():
-                loss_dict = self.model(images)
-                # this returned object from the model:
-                # len is 4 (so index here), which is probably because of the size of the batch
-                # loss_dict[index]['boxes']
-                # loss_dict[index]['labels']
-                # loss_dict[index]['scores']
-                for x in range(1):
-                    loss_value += sum(loss for loss in loss_dict[x]['scores'])
-            running_loss += loss_value
-        return running_loss
-
     def train(self):
         self.model.to(self.device)
         params = [p for p in self.model.parameters() if p.requires_grad]
@@ -107,22 +86,29 @@ class Model:
         )
         numberOfEpochs = self.configHandler.getEpochAmount()
         doEvluate = self.configHandler.getDoEpochEvaluation()
-        accuracy = []
+        lf_values = []
+        accuracy1 = []
+        accuracy2 = []
+        accuracy3 = []
         epochs = []
         for epoch in range(numberOfEpochs):
-            engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)
+            lf_values.append(engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)[0])
+            print(f"lf_values {lf_values[epoch]}")
             lr_scheduler.step()
-            running_loss = self.evaluate()
-            print(f"epoch - {epoch} running_loss - {running_loss}")
             if doEvluate:
                 engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
-                accuracy.append(self.calculate_precision_recall())
+                accuracy1.append(lf_values[epoch][0])
+                accuracy2.append(lf_values[epoch][1])
+                accuracy3.append(lf_values[epoch][2])
+
                 epochs.append(epoch)
         # Plotting the graph
-        plt.plot(epochs, accuracy, marker='o')
+        plt.plot(epochs, accuracy1, marker='o')
+        plt.plot(epochs, accuracy2, marker='o')
+        plt.plot(epochs, accuracy3, marker='o')
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy')
-        plt.title('Accuracy vs. Epochs')
+        plt.title('lf vs. Epochs \n (red - lr, blue - loss_classifier,orange - loss_box_reg)')
         plt.grid(True)
 
         # Displaying the graph
@@ -144,10 +130,12 @@ class Model:
     def covnvertToPil(self, image):
         return torchtrans.ToPILImage()(image).convert('RGB')
 
-    def testOurModel(self, iou_threshold):
+    def testOurModel(self):
         imageAmount = self.configHandler.getTestImagesAmount()
         iou_threshold = self.configHandler.getIouThreshold()
         validationImages = getValidationImagesAmount()
+        boxThreshold = self.configHandler.getBoxScoreLimit()
+
         for imageNum in range(imageAmount):
             imageNumberToEval = randrange(validationImages)
             img, target = self.dataSet_Validation[imageNumberToEval]
@@ -161,9 +149,8 @@ class Model:
             plotImageModelOutput(self.covnvertToPil(img), nms_prediction,
                                  self.configHandler.getScoreLimitGreen(), self.configHandler.getScoreLimitBlue(),
                                  self.configHandler.getSaveImagesEnabled(), "{}.png".format(imageNum),
-                                 self.configHandler.getImageDPI())
+                                 self.configHandler.getImageDPI(), boxThreshold)
         print("finished evaluation")
-
 
     def calculate_precision_recall(self):
         minVal = self.configHandler.getPrecisionRecallMinIOU()
@@ -174,6 +161,7 @@ class Model:
 
         print("iou values tested are: {}".format(iou_threshold_arr))
         print("calculate_precision_recall loading")
+
         test_images = [self.dataSet_Validation[i][0] for i in range(0,len(self.dataSet_Validation))]
         test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(0,len(self.dataSet_Validation))]
         t=0
@@ -219,12 +207,56 @@ class Model:
 
         print("actual boxex", actual_boxex)
         print("calculate_precision_recall finished")
-        plt.plot(precision, recall)
-        plt.xlabel('Precision')
-        plt.ylabel('Recall')
+        plt.plot(recall, precision)
+        plt.xlabel('recall')
+        plt.ylabel('precision')
         plt.title('Precision-Recall Curve')
-        plt.show()
+        print("Precision recall values are {} and {}".format(precision, recall))
+        plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
 
+    def precisionRecall(self):
+        minConfidence = self.configHandler.getPrecisionRecallMinConfidence()
+        maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
+        step = self.configHandler.getPrecisionRecallConfidenceSteps()
+        confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
+        iou = self.configHandler.getIouThreshold()
+
+        precisions = []
+        recalls = []
+
+        validationImages = [self.dataSet_Validation[imageNum][0] for imageNum in range(0,len(self.dataSet_Validation))]
+        actualBoxes = [self.dataSet_Validation[imageNum][1]["boxes"] for imageNum in range(0,len(self.dataSet_Validation))]
+        with torch.no_grad():
+            predictions = [self.model([img.to(self.device)])[0] for img in
+                           validationImages]
+
+        for confidence in confidencesArray:
+            filteredPredictions = filterLowGradeBoxes(predictions, confidence)
+            tp, fp, fn = 0, 0, 0
+            for prediction, actual in zip(filteredPredictions, actualBoxes):
+                tpImage, fpImage, fnImage = getOverlapResults(prediction, actual, iou)
+                tp += tpImage
+                fp += fpImage
+                fn += fnImage
+            print("tp:{}, fp:{}, fn:{}".format(tp, fp, fn))
+            try:
+                precision = tp/(tp+fp)
+            except ZeroDivisionError:
+                precision = 0.0
+            try:
+                recall = tp/(tp+fn)
+            except ZeroDivisionError:
+                recall = 0.0
+
+            precisions.append(precision)
+            recalls.append(recall)
+
+        plt.plot(recalls, precisions)
+        plt.xlabel('recall')
+        plt.ylabel('precision')
+        plt.title('Precision-Recall Curve')
+        print("Precision recall values are {} and {}".format(precisions, recalls))
+        plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
     def export(self):
         if not os.path.exists(OUTPUT_DIR):
             os.mkdir(OUTPUT_DIR)
@@ -237,17 +269,19 @@ class Model:
             os.mkdir(OUTPUT_DIR)
         inputImagesPath = self.configHandler.getInputImages()
         imagesPath = os.listdir(inputImagesPath)
+        minBoxScore = self.configHandler.getBoxScoreLimit()
         for image in imagesPath:
             self.model.eval()
             image_full_path = os.path.join(inputImagesPath, image)
             tensor_img = image_to_tensor(image_full_path)
             with torch.no_grad():
                 prediction = self.model([tensor_img.to(self.device)])[0]
-            for box in prediction['boxes']:
+            for box,score in zip(prediction['boxes'],prediction['scores']):
                 x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (
                             box[3] - box[1]).cpu().numpy()
                 x = int(round(x.min(), 0))
                 y = int(round(y.min(), 0))
                 width = int(round(width.min(), 0))
                 height = int(round(height.min(), 0))
-                get_single_insect_image(image_full_path, x, y, width, height)
+                if score >= minBoxScore:
+                    get_single_insect_image(image_full_path, x, y, width, height)
