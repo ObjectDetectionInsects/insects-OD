@@ -55,30 +55,6 @@ class ConfigHandler(Singleton):
         else:
             return 0.01
 
-    def getPrecisionRecallMaxIOU(self):
-        if self.config.has_option('HyperParameters', 'precisionRecallIouMax'):
-            return min(1.0, self.config.getfloat('HyperParameters', 'precisionRecallIouMax'))
-        else:
-            return 1.0
-
-    def getPrecisionRecallMinIOU(self):
-        if self.config.has_option('HyperParameters', 'precisionRecallIouMin'):
-            return max(0.01, self.config.getfloat('HyperParameters', 'precisionRecallIouMin'))
-        else:
-            return 0.01
-
-    def getPrecisionRecallIouSteps(self):
-        if self.config.has_option('HyperParameters', 'precisionRecallSteps'):
-            return self.config.getfloat('HyperParameters', 'precisionRecallSteps')
-        else:
-            return 0.1
-
-    def getTestSplit(self):
-        if self.config.has_option('HyperParameters', 'testSplit'):
-            return self.config.getfloat('HyperParameters', 'testSplit')
-        else:
-            return 0.2
-
     def getImageBatchSize(self):
         if self.config.has_option('HyperParameters', 'imageBatchSize'):
             return self.config.getint('HyperParameters', 'imageBatchSize')
@@ -103,17 +79,35 @@ class ConfigHandler(Singleton):
         else:
             return 150
 
-    def getDoPrecissionRecall(self):
-        if self.config.has_option('HyperParameters', 'performPrecisionRecall'):
-            return self.config.getboolean('HyperParameters', 'performPrecisionRecall')
-        else:
-            return False
-
     def getDoEpochEvaluation(self):
         if self.config.has_option('HyperParameters', 'performEvaluate'):
             return self.config.getboolean('HyperParameters', 'performEvaluate')
         else:
             return False
+
+    def getDoPrecissionRecall(self):
+        if self.config.has_option('PrecisionRecall', 'performPrecisionRecall'):
+            return self.config.getboolean('PrecisionRecall', 'performPrecisionRecall')
+        else:
+            return False
+
+    def getPrecisionRecallMaxConfidence(self):
+        if self.config.has_option('PrecisionRecall', 'precisionRecallMaxConfidence'):
+            return min(1.0, self.config.getfloat('PrecisionRecall', 'precisionRecallMaxConfidence'))
+        else:
+            return 1.0
+
+    def getPrecisionRecallMinConfidence(self):
+        if self.config.has_option('PrecisionRecall', 'precisionRecallMinConfidence'):
+            return max(0.01, self.config.getfloat('PrecisionRecall', 'precisionRecallMinConfidence'))
+        else:
+            return 0.01
+
+    def getPrecisionRecallConfidenceSteps(self):
+        if self.config.has_option('PrecisionRecall', 'getPrecisionRecallConfidenceSteps'):
+            return self.config.getfloat('PrecisionRecall', 'getPrecisionRecallConfidenceSteps')
+        else:
+            return 0.1
 
     def getScoreLimitGreen(self):
         if self.config.has_option('ScoreLimits', 'green'):
@@ -126,6 +120,12 @@ class ConfigHandler(Singleton):
             return self.config.getfloat('ScoreLimits', 'blue')
         else:
             return 0.8
+
+    def getBoxScoreLimit(self):
+        if self.config.has_option('ScoreLimits', 'minConfidence'):
+            return self.config.getfloat('ScoreLimits', 'minConfidence')
+        else:
+            return 0.5
 
     def getSaveImagesEnabled(self):
         if self.config.has_option('OutPutBehavior', 'saveImages'):

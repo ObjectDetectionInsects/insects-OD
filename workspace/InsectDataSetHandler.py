@@ -122,10 +122,12 @@ def get_transform(train):
 
 if __name__ == '__main__':
     configParser = ConfigHandler(CONFIGPATH)
-    dataSetDir = TRAIN_DATA_SET_PATH
+    dataSetDir = VALIDATION_DATA_SET_PATH
     print(dataSetDir)
     dataSetClass = InsectDataSetHandler(dataSetDir, configParser.getImageWidth(), configParser.getImageWidth())
-    imageNumbRandom = randrange(30)
-    image, target = dataSetClass[imageNumbRandom]
-    plotImage(image, target)
+    for imageNumber in range(getValidationImagesAmount()):
+        imageNumbRandom = randrange(30)
+        imageNumbRandom = imageNumber
+        image, target = dataSetClass[imageNumbRandom]
+        plotImage(image, target, "{}.png".format(imageNumber))
     print("plotted images for verification")

@@ -109,6 +109,8 @@ class Model:
         imageAmount = self.configHandler.getTestImagesAmount()
         iou_threshold = self.configHandler.getIouThreshold()
         validationImages = getValidationImagesAmount()
+        boxThreshold = self.configHandler.getBoxScoreLimit()
+
         for imageNum in range(imageAmount):
             imageNumberToEval = randrange(validationImages)
             img, target = self.dataSet_Validation[imageNumberToEval]
@@ -122,35 +124,37 @@ class Model:
             plotImageModelOutput(self.covnvertToPil(img), nms_prediction,
                                  self.configHandler.getScoreLimitGreen(), self.configHandler.getScoreLimitBlue(),
                                  self.configHandler.getSaveImagesEnabled(), "{}.png".format(imageNum),
-                                 self.configHandler.getImageDPI())
+                                 self.configHandler.getImageDPI(), boxThreshold)
         print("finished evaluation")
 
-
     def calculate_precision_recall(self):
-        minVal = self.configHandler.getPrecisionRecallMinIOU()
-        maxVal = self.configHandler.getPrecisionRecallMaxIOU()
-        step = self.configHandler.getPrecisionRecallIouSteps()
+        minConfidence = self.configHandler.getPrecisionRecallMinConfidence()
+        maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
+        step = self.configHandler.getPrecisionRecallConfidenceSteps()
         thresh_hold = self.configHandler.getRetangaleOverlap()
-        iou_threshold_arr = getIOUArray(minVal, maxVal, step)
+        confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
+        iou = self.configHandler.getIouThreshold()
 
-        print("iou values tested are: {}".format(iou_threshold_arr))
+        print("confidence values tested are: {}".format(confidencesArray))
         print("calculate_precision_recall loading")
+
         test_images = [self.dataSet_Validation[i][0] for i in range(0,len(self.dataSet_Validation))]
         test_boxes = [self.dataSet_Validation[i][1]["boxes"] for i in range(0,len(self.dataSet_Validation))]
         t=0
         precision=[]
         recall=[]
         actual_boxex = 0
-        iou_threshold_arr = [0.01]
-        for thresh in iou_threshold_arr:
-            print(f"check {t} out of {len(iou_threshold_arr)}")
-            with torch.no_grad():
-                predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0],iou_threshold=thresh) for img in test_images]
+        with torch.no_grad():
+            predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0], iou_threshold=iou) for img in
+                           test_images]
+
+        for confidence in confidencesArray:
+            print(f"check {t} out of {len(confidencesArray)}")
+            filteredPredictions = filterLowGradeBoxes(predictions, confidence)
             true_positives, false_positives, false_negatives = 0, 0, 0
-            # true_positives_arr = []
             preds = ([[(pred_box[0].to(torch.int32), pred_box[1].to(torch.int32),
                         (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32))
-                       for pred_box in pred["boxes"]] for pred in predictions])
+                       for pred_box in pred["boxes"]] for pred in filteredPredictions])
             tests = ([[(test_box[0].to(torch.int32), test_box[1].to(torch.int32),
                         (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32))
                        for test_box in test] for test in test_boxes])
@@ -175,7 +179,6 @@ class Model:
                     if a:
                         false_negatives +=1
             t+=1
-            # true_positives_arr.append(true_positives)
             precision.append((true_positives/(true_positives + false_positives)))
             recall.append((true_positives/(true_positives + false_negatives)))
             print("True Positives:", true_positives)
@@ -184,14 +187,56 @@ class Model:
 
         print("actual boxex", actual_boxex)
         print("calculate_precision_recall finished")
-        plt.plot(precision, recall)
-        plt.xlabel('Precision')
-        plt.ylabel('Recall')
+        plt.plot(recall, precision)
+        plt.xlabel('recall')
+        plt.ylabel('precision')
         plt.title('Precision-Recall Curve')
         print("Precision recall values are {} and {}".format(precision, recall))
         plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
-        # return (true_positives_arr[0]/actual_boxex)
 
+    def precisionRecall(self):
+        minConfidence = self.configHandler.getPrecisionRecallMinConfidence()
+        maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
+        step = self.configHandler.getPrecisionRecallConfidenceSteps()
+        confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
+        iou = self.configHandler.getIouThreshold()
+
+        precisions = []
+        recalls = []
+
+        validationImages = [self.dataSet_Validation[imageNum][0] for imageNum in range(0,len(self.dataSet_Validation))]
+        actualBoxes = [self.dataSet_Validation[imageNum][1]["boxes"] for imageNum in range(0,len(self.dataSet_Validation))]
+        with torch.no_grad():
+            predictions = [self.model([img.to(self.device)])[0] for img in
+                           validationImages]
+
+        for confidence in confidencesArray:
+            filteredPredictions = filterLowGradeBoxes(predictions, confidence)
+            tp, fp, fn = 0, 0, 0
+            for prediction, actual in zip(filteredPredictions, actualBoxes):
+                tpImage, fpImage, fnImage = getOverlapResults(prediction, actual, iou)
+                tp += tpImage
+                fp += fpImage
+                fn += fnImage
+            print("tp:{}, fp:{}, fn:{}".format(tp, fp, fn))
+            try:
+                precision = tp/(tp+fp)
+            except ZeroDivisionError:
+                precision = 0.0
+            try:
+                recall = tp/(tp+fn)
+            except ZeroDivisionError:
+                recall = 0.0
+
+            precisions.append(precision)
+            recalls.append(recall)
+
+        plt.plot(recalls, precisions)
+        plt.xlabel('recall')
+        plt.ylabel('precision')
+        plt.title('Precision-Recall Curve')
+        print("Precision recall values are {} and {}".format(precisions, recalls))
+        plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
     def export(self):
         if not os.path.exists(OUTPUT_DIR):
             os.mkdir(OUTPUT_DIR)
@@ -204,17 +249,19 @@ class Model:
             os.mkdir(OUTPUT_DIR)
         inputImagesPath = self.configHandler.getInputImages()
         imagesPath = os.listdir(inputImagesPath)
+        minBoxScore = self.configHandler.getBoxScoreLimit()
         for image in imagesPath:
             self.model.eval()
             image_full_path = os.path.join(inputImagesPath, image)
             tensor_img = image_to_tensor(image_full_path)
             with torch.no_grad():
                 prediction = self.model([tensor_img.to(self.device)])[0]
-            for box in prediction['boxes']:
+            for box,score in zip(prediction['boxes'],prediction['scores']):
                 x, y, width, height = box[0].cpu().numpy(), box[1].cpu().numpy(), (box[2] - box[0]).cpu().numpy(), (
                             box[3] - box[1]).cpu().numpy()
                 x = int(round(x.min(), 0))
                 y = int(round(y.min(), 0))
                 width = int(round(width.min(), 0))
                 height = int(round(height.min(), 0))
-                get_single_insect_image(image_full_path, x, y, width, height)
+                if score >= minBoxScore:
+                    get_single_insect_image(image_full_path, x, y, width, height)

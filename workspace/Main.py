@@ -14,6 +14,6 @@ if __name__ == '__main__':
             Model.export()
         if configObject.getDoPrecissionRecall():
             print("Generating confusion matrix - this might take a while!")
-            Model.calculate_precision_recall()
+            Model.precisionRecall()
     else:
         Model.exportSingleInsect()
