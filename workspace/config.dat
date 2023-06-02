@@ -1,7 +1,7 @@
 [General]
 onlyOutput = False
 makeModelFromScratch = True
-pathToModelToLoad = --
+pathToModelToLoad = C:\Users\koren\Desktop\insects_vison_project\git_OD\insects-OD\workspace\oriTesting.pkl
 inputImages = --
 
 [HyperParameters]
@@ -9,11 +9,11 @@ onlyDetection = True
 performEvaluate = True
 performPrecisionRecall = False
 precisionRecallIouMax = 1.0
-precisionRecallIouMin - 0.01
+precisionRecallIouMin = 0.01
 getPrecisionRecallIouSteps = 0.1
-epochs = 2
+epochs = 1
 testSplit = 0.2
-imageBatchSize = 10
+imageBatchSize = 1
 rectangleOverLapLimitInPixels = 150
 splitImageHeightInPixels = 2000
 splitImageWidthInPixels = 2000

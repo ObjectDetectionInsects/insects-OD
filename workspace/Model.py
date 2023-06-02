@@ -41,7 +41,7 @@ class Model:
         batch_size = self.configHandler.getImageBatchSize()
         # define training and validation data loaders
         self.dataLoader = torch.utils.data.DataLoader(
-            self.dataSet,
+            self.dataSet_Validation,
             batch_size=batch_size,
             shuffle=True,
             num_workers=4,
@@ -72,6 +72,27 @@ class Model:
                 raise FileNotFoundError
         self.model = model
 
+    def evaluate(self):
+        self.model.eval()
+
+        running_loss = 0.0
+        loss_value = 0.0
+
+        for images, targets in self.dataLoader:
+            images = list(img.to(self.device) for img in images)
+            target = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
+            with torch.no_grad():
+                loss_dict = self.model(images)
+                # this returned object from the model:
+                # len is 4 (so index here), which is probably because of the size of the batch
+                # loss_dict[index]['boxes']
+                # loss_dict[index]['labels']
+                # loss_dict[index]['scores']
+                for x in range(1):
+                    loss_value += sum(loss for loss in loss_dict[x]['scores'])
+            running_loss += loss_value
+        return running_loss
+
     def train(self):
         self.model.to(self.device)
         params = [p for p in self.model.parameters() if p.requires_grad]
@@ -91,7 +112,7 @@ class Model:
         for epoch in range(numberOfEpochs):
             engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)
             lr_scheduler.step()
-            running_loss = evaluate(self.model(),self.dataLoader)
+            running_loss = self.evaluate()
             print(f"epoch - {epoch} running_loss - {running_loss}")
             if doEvluate:
                 engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
@@ -107,30 +128,7 @@ class Model:
         # Displaying the graph
         plt.show()
 
-    def evaluate(model, dataloader):
-        model.eval()
 
-        running_loss = 0.0
-        loss_value = 0.0
-
-        for images, targets in dataloader:
-            images = list(img.to(device) for img in images)
-            targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-
-            with torch.no_grad():
-                loss_dict = model(images)
-
-                # this returned object from the model:
-                # len is 4 (so index here), which is probably because of the size of the batch
-                # loss_dict[index]['boxes']
-                # loss_dict[index]['labels']
-                # loss_dict[index]['scores']
-                for x in range(1):
-                    loss_value += sum(loss for loss in loss_dict[x]['scores'])
-
-            running_loss += loss_value
-
-        return running_loss
 
 
     def filterOutPuts(self, orig_prediction, iou_threshold = 0.3):
@@ -172,7 +170,7 @@ class Model:
         maxVal = self.configHandler.getPrecisionRecallMaxIOU()
         step = self.configHandler.getPrecisionRecallIouSteps()
         thresh_hold = self.configHandler.getRetangaleOverlap()
-        iou_threshold_arr = getIOUArray(minVal, maxVal, step)
+        iou_threshold_arr = [minVal,maxVal]
 
         print("iou values tested are: {}".format(iou_threshold_arr))
         print("calculate_precision_recall loading")
