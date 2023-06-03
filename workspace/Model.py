@@ -86,36 +86,24 @@ class Model:
         )
         numberOfEpochs = self.configHandler.getEpochAmount()
         doEvluate = self.configHandler.getDoEpochEvaluation()
-        lf_values = []
-        accuracy1 = []
-        accuracy2 = []
-        accuracy3 = []
+        doLossPerEpoch = self.configHandler.getdoLossPerEpoch()
+        loss_rate = []
         epochs = []
         for epoch in range(numberOfEpochs):
-            lf_values.append(engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)[0])
-            print(f"lf_values {lf_values[epoch]}")
+            loss_rate.append(engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)[0][0])
             lr_scheduler.step()
+            epochs.append(epoch+1)
             if doEvluate:
                 engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
-                accuracy1.append(lf_values[epoch][0])
-                accuracy2.append(lf_values[epoch][1])
-                accuracy3.append(lf_values[epoch][2])
-
-                epochs.append(epoch)
-        # Plotting the graph
-        plt.plot(epochs, accuracy1, marker='o')
-        plt.plot(epochs, accuracy2, marker='o')
-        plt.plot(epochs, accuracy3, marker='o')
-        plt.xlabel('Epochs')
-        plt.ylabel('Accuracy')
-        plt.title('lf vs. Epochs \n (red - lr, blue - loss_classifier,orange - loss_box_reg)')
-        plt.grid(True)
-
-        # Displaying the graph
-        plt.show()
-
-
-
+        if doLossPerEpoch:
+            max_loss = max(loss_rate)[0] * 1.1
+            plt.plot(epochs, loss_rate, marker='o')
+            plt.ylim(0,max_loss)
+            plt.xlabel('Epochs')
+            plt.ylabel('Loss')
+            plt.title('Loss per Epoch')
+            plt.grid(True)
+            plt.savefig(os.path.join(OUTPUT_DIR, "lossPerEpoch.png"))
 
     def filterOutPuts(self, orig_prediction, iou_threshold = 0.3):
         keep = torchvision.ops.nms(orig_prediction['boxes'], orig_prediction['scores'], iou_threshold)

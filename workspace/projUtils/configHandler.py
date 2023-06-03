@@ -115,6 +115,12 @@ class ConfigHandler(Singleton):
         else:
             return False
 
+    def getdoLossPerEpoch(self):
+        if self.config.has_option('HyperParameters', 'performLossPerEpoch'):
+            return self.config.getboolean('HyperParameters', 'performLossPerEpoch')
+        else:
+            return False
+
     def getDoPrecissionRecall(self):
         if self.config.has_option('PrecisionRecall', 'performPrecisionRecall'):
             return self.config.getboolean('PrecisionRecall', 'performPrecisionRecall')
