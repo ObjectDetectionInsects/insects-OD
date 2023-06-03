@@ -109,6 +109,36 @@ class ConfigHandler(Singleton):
         else:
             return 0.1
 
+    def getdoLossPerEpoch(self):
+        if self.config.has_option('HyperParameters', 'performLossPerEpoch'):
+            return self.config.getboolean('HyperParameters', 'performLossPerEpoch')
+        else:
+            return False
+
+    def getDoPrecissionRecall(self):
+        if self.config.has_option('PrecisionRecall', 'performPrecisionRecall'):
+            return self.config.getboolean('PrecisionRecall', 'performPrecisionRecall')
+        else:
+            return False
+
+    def getPrecisionRecallMaxConfidence(self):
+        if self.config.has_option('PrecisionRecall', 'precisionRecallMaxConfidence'):
+            return min(1.0, self.config.getfloat('PrecisionRecall', 'precisionRecallMaxConfidence'))
+        else:
+            return 1.0
+
+    def getPrecisionRecallMinConfidence(self):
+        if self.config.has_option('PrecisionRecall', 'precisionRecallMinConfidence'):
+            return max(0.01, self.config.getfloat('PrecisionRecall', 'precisionRecallMinConfidence'))
+        else:
+            return 0.01
+
+    def getPrecisionRecallConfidenceSteps(self):
+        if self.config.has_option('PrecisionRecall', 'getPrecisionRecallConfidenceSteps'):
+            return self.config.getfloat('PrecisionRecall', 'getPrecisionRecallConfidenceSteps')
+        else:
+            return 0.1
+
     def getScoreLimitGreen(self):
         if self.config.has_option('ScoreLimits', 'green'):
             return self.config.getfloat('ScoreLimits', 'green')
@@ -166,6 +196,4 @@ if __name__ == '__main__':
     # print(configHandler.getSaveImagesAmount())
     # print(configHandler.getTestSplit())
     # print(configHandler.getScoreLimitBlue())
-    test2 = configHandler.getPrecisionRecallIOUs()
-    test1 = configHandler.getIouThreshold()
     print(configHandler.getRetangaleOverlap())

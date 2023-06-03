@@ -86,11 +86,24 @@ class Model:
         )
         numberOfEpochs = self.configHandler.getEpochAmount()
         doEvluate = self.configHandler.getDoEpochEvaluation()
+        doLossPerEpoch = self.configHandler.getdoLossPerEpoch()
+        loss_rate = []
+        epochs = []
         for epoch in range(numberOfEpochs):
-            engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)
+            loss_rate.append(engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10)[0][0])
             lr_scheduler.step()
+            epochs.append(epoch+1)
             if doEvluate:
                 engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
+        if doLossPerEpoch:
+            max_loss = max(loss_rate)[0] * 1.1
+            plt.plot(epochs, loss_rate, marker='o')
+            plt.ylim(0,max_loss)
+            plt.xlabel('Epochs')
+            plt.ylabel('Loss')
+            plt.title('Loss per Epoch')
+            plt.grid(True)
+            plt.savefig(os.path.join(OUTPUT_DIR, "lossPerEpoch.png"))
 
     def filterOutPuts(self, orig_prediction, iou_threshold = 0.3):
         keep = torchvision.ops.nms(orig_prediction['boxes'], orig_prediction['scores'], iou_threshold)
@@ -128,10 +141,16 @@ class Model:
         print("finished evaluation")
 
     def calculate_precision_recall(self):
+        minVal = self.configHandler.getPrecisionRecallMinIOU()
+        maxVal = self.configHandler.getPrecisionRecallMaxIOU()
+        step = self.configHandler.getPrecisionRecallIouSteps()
         minConfidence = self.configHandler.getPrecisionRecallMinConfidence()
         maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
         step = self.configHandler.getPrecisionRecallConfidenceSteps()
         thresh_hold = self.configHandler.getRetangaleOverlap()
+        iou_threshold_arr = [minVal,maxVal]
+
+        print("iou values tested are: {}".format(iou_threshold_arr))
         confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
         iou = self.configHandler.getIouThreshold()
 
