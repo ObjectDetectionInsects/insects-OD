@@ -94,7 +94,7 @@ class Model:
             if doEvluate:
                 engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
         if doLossPerEpoch:
-            loss_rate = loss_rate[0]
+            loss_rate = list(zip(*loss_rate))
             epochs = [i for i in range(len(loss_rate))]
             max_loss = max(loss_rate) * 1.1
             plt.plot(epochs, loss_rate, marker='o')
@@ -144,17 +144,10 @@ class Model:
         minVal = self.configHandler.getPrecisionRecallMinIOU()
         maxVal = self.configHandler.getPrecisionRecallMaxIOU()
         step = self.configHandler.getPrecisionRecallIouSteps()
-        minConfidence = self.configHandler.getPrecisionRecallMinConfidence()
-        maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
-        step = self.configHandler.getPrecisionRecallConfidenceSteps()
         thresh_hold = self.configHandler.getRetangaleOverlap()
         iou_threshold_arr = [minVal,maxVal]
 
         print("iou values tested are: {}".format(iou_threshold_arr))
-        confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
-        iou = self.configHandler.getIouThreshold()
-
-        print("confidence values tested are: {}".format(confidencesArray))
         print("calculate_precision_recall loading")
 
         test_images = [self.dataSet_Validation[i][0] for i in range(0,len(self.dataSet_Validation))]
@@ -163,20 +156,16 @@ class Model:
         precision=[]
         recall=[]
         actual_boxex = 0
-        with torch.no_grad():
-            predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0], iou_threshold=iou) for img in
-                           test_images]
-
-        for confidence in confidencesArray:
-            print(f"check {t} out of {len(confidencesArray)}")
-            filteredPredictions = filterLowGradeBoxes(predictions, confidence)
-            true_positives, false_positives, false_negatives = 0, 0, 0
-            preds = ([[(pred_box[0].to(torch.int32), pred_box[1].to(torch.int32),
-                        (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32))
-                       for pred_box in pred["boxes"]] for pred in filteredPredictions])
-            tests = ([[(test_box[0].to(torch.int32), test_box[1].to(torch.int32),
-                        (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32))
-                       for test_box in test] for test in test_boxes])
+        iou_threshold_arr = [0.01]
+        for thresh in iou_threshold_arr:
+            print(f"check {t} out of {len(iou_threshold_arr)}")
+            with torch.no_grad():
+                predictions = [self.filterOutPuts(self.model([img.to(self.device)])[0],iou_threshold=thresh) for img in test_images]
+            true_positives = 0
+            false_positives = 0
+            false_negatives = 0
+            preds=([[(pred_box[0].to(torch.int32), pred_box[1].to(torch.int32), (pred_box[2] - pred_box[0]).to(torch.int32), (pred_box[3] - pred_box[1]).to(torch.int32)) for pred_box in  pred["boxes"]] for pred in predictions])
+            tests=([[(test_box[0].to(torch.int32), test_box[1].to(torch.int32), (test_box[2] - test_box[0]).to(torch.int32), (test_box[3] - test_box[1]).to(torch.int32)) for test_box in test] for test in test_boxes])
             for pred_1,test_1 in zip(preds,tests):
                 for pred_2 in pred_1:
                     a = True
