@@ -14,9 +14,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    # metric_logger.meters
     lf_values = []
-    # lf_values_ex = []
 
     header = 'Epoch: [{}]'.format(epoch)
 
@@ -57,13 +55,6 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
         if(len(lf_values) < 1):
             lf_values.append(metric_logger.meters["loss"].avg)
-            # lf_values.append([metric_logger.meters["loss"].avg, metric_logger.meters["loss_classifier"].avg,
-            #                   metric_logger.meters["loss_box_reg"].avg, metric_logger.meters["loss_rpn_box_reg"].avg,
-            #                   metric_logger.meters["loss_objectness"].avg])
-        # lf_values_ex.append([[metric_logger.meters["loss"].avg],[metric_logger.meters["loss_classifier"].avg],
-        #               [metric_logger.meters["loss_box_reg"].avg],[metric_logger.meters["loss_rpn_box_reg"].avg],[metric_logger.meters["loss_objectness"].avg]])
-    # lf_values.append([metric_logger.meters["loss"].avg,metric_logger.meters["loss_classifier"].avg,
-    #                   metric_logger.meters["loss_box_reg"].avg,metric_logger.meters["loss_rpn_box_reg"].avg,metric_logger.meters["loss_objectness"].avg])
     lf_values.append(metric_logger.meters["loss"].avg)
     return(lf_values)
 
