@@ -88,26 +88,14 @@ class Model:
         doEvluate = self.configHandler.getDoEpochEvaluation()
         doLossPerEpoch = self.configHandler.getdoLossPerEpoch()
         loss_rate = []
-        loss_rate2 = []
         for epoch in range(numberOfEpochs):
             loss_rate.append(engine.train_one_epoch(self.model, optimizer, self.dataLoader, self.device, epoch, print_freq=10))
             lr_scheduler.step()
             if doEvluate:
                 engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
         if doLossPerEpoch:
-            # epochs = [i for i in range(len(loss_rate[0]*numberOfEpochs))]
-            # print(loss_rate)
-            # print(len(loss_rate[0]))
-            # # loss_rate2 = [[loss_rate[0][i][0]] for i in len(loss_rate[0])]
-            # print(len(loss_rate))
-            loss_rate = loss_rate[0]
-            print(loss_rate)
+            loss_rate = list(zip(*loss_rate))
             epochs = [i for i in range(len(loss_rate))]
-            print(f"!!!!!!!!!!!!!!{epochs}")
-            # a=[[[1.1358028650283813, 0.5318865776062012, 0.3059080243110657, 0.015454649925231934, 0.2825535535812378], [1.0578477382659912, 0.40596503019332886, 0.4108307361602783, 0.020273687317967415, 0.22077827155590057]]]
-
-
-            # max_loss = max(loss_rate[0])[0] * 1.1
             max_loss = max(loss_rate) * 1.1
             plt.plot(epochs, loss_rate, marker='o')
             plt.ylim(0,max_loss)
