@@ -6,9 +6,9 @@ inputImages = D:\University\objectDetectionInsects\inputTesting
 
 [HyperParameters]
 onlyDetection = True
-performEvaluate = True
+performEvaluate = False
 performLossPerEpoch = True
-epochs = 3
+epochs = 1
 imageBatchSize = 1
 rectangleOverLapLimitInPixels = 150
 splitImageWidthInPixels = 2000
