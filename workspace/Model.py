@@ -150,7 +150,7 @@ class Model:
         minConfidence = self.configHandler.getPrecisionRecallMinConfidence()
         maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
         step = self.configHandler.getPrecisionRecallConfidenceSteps()
-        thresh_hold = self.configHandler.getRetangaleOverlap()
+        thresh_hold = 150
         confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
         iou = self.configHandler.getIouThresholdForPrecisionRecall()
 

@@ -10,7 +10,6 @@ performEvaluate = True
 performLossPerEpoch = True
 epochs = 20
 imageBatchSize = 10
-rectangleOverLapLimitInPixels = 150
 splitImageWidthInPixels = 2000
 splitImageHeightInPixels = 2000
 iouThresholdForOverlap = 0.1

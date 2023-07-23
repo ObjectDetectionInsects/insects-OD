@@ -73,12 +73,6 @@ class ConfigHandler(Singleton):
         else:
             return 2000
 
-    def getRetangaleOverlap(self):
-        if self.config.has_option('HyperParameters', 'rectangleOverLapLimitInPixels'):
-            return self.config.getint('HyperParameters', 'rectangleOverLapLimitInPixels')
-        else:
-            return 150
-
     def getDoEpochEvaluation(self):
         if self.config.has_option('HyperParameters', 'performEvaluate'):
             return self.config.getboolean('HyperParameters', 'performEvaluate')
@@ -173,9 +167,7 @@ if __name__ == '__main__':
     #for testing purposes of configHandler object
     configHandler = ConfigHandler(CONFIGPATH)
     print("verifying parameters")
-    # print(configHandler.getIsOnlyDetect())
-    # print(configHandler.getSaveImagesAmount())
-    # print(configHandler.getTestSplit())
-    # print(configHandler.getScoreLimitBlue())
-    test1 = configHandler.getIouThresholdForPrecisionRecall()
-    print(configHandler.getRetangaleOverlap())
+    print(configHandler.getIsOnlyDetect())
+    print(configHandler.getSaveImagesAmount())
+    print(configHandler.getTestSplit())
+    print(configHandler.getScoreLimitBlue())
