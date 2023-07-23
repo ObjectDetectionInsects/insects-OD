@@ -9,12 +9,12 @@ In this quick read-me I will go over 3 subjects
 ### Config behavior 
 - everything related to the way in which different parameters change the behavior of the project
 
-See indepth explanations [here](workspace/projUtils/CONFIGBEHAVIOR.MD)
+See indepth explanations [here](./workspace/projUtils/CONFIGBEHAVIOR.MD)
 
 ### preparing the data for detection
 - everything related to transforming the input files to expected format 
 
-See indepth explanations [here](workspace/projUtils/UTILS.MD)
+See indepth explanations [here](./workspace/projUtils/UTILS.MD)
 
 ### Projects flow and output behavior
 
