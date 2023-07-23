@@ -49,11 +49,11 @@ class ConfigHandler(Singleton):
         else:
             return 3
 
-    def getIouThreshold(self):
-        if self.config.has_option('HyperParameters', 'iouThreshold'):
-            return self.config.getfloat('HyperParameters', 'iouThreshold')
+    def getIouThresholdForPredictionOverlap(self):
+        if self.config.has_option('HyperParameters', 'iouThresholdForOverlap'):
+            return self.config.getfloat('HyperParameters', 'iouThresholdForOverlap')
         else:
-            return 0.01
+            return 0.5
 
     def getImageBatchSize(self):
         if self.config.has_option('HyperParameters', 'imageBatchSize'):
@@ -85,30 +85,6 @@ class ConfigHandler(Singleton):
         else:
             return False
 
-    def getDoPrecissionRecall(self):
-        if self.config.has_option('PrecisionRecall', 'performPrecisionRecall'):
-            return self.config.getboolean('PrecisionRecall', 'performPrecisionRecall')
-        else:
-            return False
-
-    def getPrecisionRecallMaxConfidence(self):
-        if self.config.has_option('PrecisionRecall', 'precisionRecallMaxConfidence'):
-            return min(1.0, self.config.getfloat('PrecisionRecall', 'precisionRecallMaxConfidence'))
-        else:
-            return 1.0
-
-    def getPrecisionRecallMinConfidence(self):
-        if self.config.has_option('PrecisionRecall', 'precisionRecallMinConfidence'):
-            return max(0.01, self.config.getfloat('PrecisionRecall', 'precisionRecallMinConfidence'))
-        else:
-            return 0.01
-
-    def getPrecisionRecallConfidenceSteps(self):
-        if self.config.has_option('PrecisionRecall', 'getPrecisionRecallConfidenceSteps'):
-            return self.config.getfloat('PrecisionRecall', 'getPrecisionRecallConfidenceSteps')
-        else:
-            return 0.1
-
     def getdoLossPerEpoch(self):
         if self.config.has_option('HyperParameters', 'performLossPerEpoch'):
             return self.config.getboolean('HyperParameters', 'performLossPerEpoch')
@@ -138,6 +114,12 @@ class ConfigHandler(Singleton):
             return self.config.getfloat('PrecisionRecall', 'getPrecisionRecallConfidenceSteps')
         else:
             return 0.1
+
+    def getIouThresholdForPrecisionRecall(self):
+        if self.config.has_option('PrecisionRecall', 'iouThreshold'):
+            return self.config.getfloat('PrecisionRecall', 'iouThreshold')
+        else:
+            return 0.5
 
     def getScoreLimitGreen(self):
         if self.config.has_option('ScoreLimits', 'green'):
@@ -181,7 +163,6 @@ class ConfigHandler(Singleton):
         else:
             return False
 
-
     def getExportModelName(self):
         if self.config.has_option('OutPutBehavior', 'ModelExportName'):
             return self.config.get('OutPutBehavior', 'ModelExportName')
@@ -196,4 +177,5 @@ if __name__ == '__main__':
     # print(configHandler.getSaveImagesAmount())
     # print(configHandler.getTestSplit())
     # print(configHandler.getScoreLimitBlue())
+    test1 = configHandler.getIouThresholdForPrecisionRecall()
     print(configHandler.getRetangaleOverlap())

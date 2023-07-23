@@ -122,10 +122,10 @@ def get_transform(train):
 
 if __name__ == '__main__':
     configParser = ConfigHandler(CONFIGPATH)
-    dataSetDir = VALIDATION_DATA_SET_PATH
+    dataSetDir = TRAIN_DATA_SET_PATH
     print(dataSetDir)
     dataSetClass = InsectDataSetHandler(dataSetDir, configParser.getImageWidth(), configParser.getImageWidth())
-    for imageNumber in range(getValidationImagesAmount()):
+    for imageNumber in range(getImageAmountInDir(TRAIN_DATA_SET_PATH)):
         imageNumbRandom = randrange(30)
         imageNumbRandom = imageNumber
         image, target = dataSetClass[imageNumbRandom]

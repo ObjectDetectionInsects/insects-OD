@@ -222,8 +222,31 @@ def get_single_insect_image(image_path, x, y, w, h):
     new_file_name = image_filename + "-insect-{}-{}.".format(x, y) + image_extension
     a.save(os.path.join(OUTPUT_DIR, new_file_name))
 
+def countBoxes(listOfPredictions, predictionResults = False):
+    count = 0
+    for prediction in listOfPredictions:
+        if predictionResults:
+            prediction = prediction["boxes"]
+        for box in prediction:
+            count += 1
+    return count
+
+def filterEdgePredictions(predictions, imageWidth, imageHeight):
+    filtered_predictions = []
+    for pred in predictions:
+        filtered_boxes = []
+        for pred_box in pred["boxes"]:
+            x_topleft_p, y_topleft_p, x_bottomright_p, y_bottomright_p = pred_box.data.cpu().numpy()
+            if not ((imageHeight - y_topleft_p < 2) or (imageHeight - y_bottomright_p < 2)
+                or (imageWidth - x_topleft_p < 2) or (imageWidth - x_bottomright_p < 2)):
+                filtered_boxes.append(pred_box)
+        if filtered_boxes:
+            pred["boxes"] = filtered_boxes
+            filtered_predictions.append(pred)
+    return filtered_predictions
 
 def filterLowGradeBoxes(predictions, boxThreshold):
+    #the input is a list of predictions (on multiple images)
     filtered_predictions = []
 
     for pred in predictions:
@@ -284,7 +307,7 @@ def plotImage(img, target, imageName):
         )
         # Draw the bounding box on top of the image
         a.add_patch(rect)
-    plt.show()
+    # plt.show()
     if not os.path.exists(OUTPUT_DIR):
         os.mkdir(OUTPUT_DIR)
     plt.savefig(os.path.join(OUTPUT_DIR, imageName), dpi=500)
@@ -340,8 +363,8 @@ def split_train_test_validation(splittedPath = SPLITTED_DATA_SET_PATH):
                 os.remove(os.path.join(splittedPath, filename))
 
 
-def getValidationImagesAmount():
-    jpg_files = glob.glob(os.path.join(VALIDATION_DATA_SET_PATH, '*{}'.format(JPG_EXTENSION)))
+def getImageAmountInDir(path):
+    jpg_files = glob.glob(os.path.join(path, '*{}'.format(JPG_EXTENSION)))
     return len(jpg_files)
 
 
@@ -367,22 +390,33 @@ def getConfidenceArray(minVal, maxVal, step):
 
 
 def calculateIOU(predictionBox, actualBox):
-    x_topleft_gt, y_topleft_gt, x_bottomright_gt, y_bottomright_gt= actualBox.numpy()
-    x_topleft_p, y_topleft_p, x_bottomright_p, y_bottomright_p= predictionBox.data.cpu().numpy()
+    x1_1, y1_1, x2_1, y2_1 = actualBox.numpy()
+    x1_2, y1_2, x2_2, y2_2 = predictionBox.data.cpu().numpy()
 
-    GT_bbox_area = (x_bottomright_gt - x_topleft_gt + 1) * (y_bottomright_gt - y_topleft_gt + 1)
-    Pred_bbox_area =(x_bottomright_p - x_topleft_p + 1 ) * ( y_bottomright_p - y_topleft_p + 1)
+    # Calculate intersection coordinates
+    intersect_x1 = max(x1_1, x1_2)
+    intersect_y1 = max(y1_1, y1_2)
+    intersect_x2 = min(x2_1, x2_2)
+    intersect_y2 = min(y2_1, y2_2)
 
-    x_top_left = np.max([x_topleft_gt, x_topleft_p])
-    y_top_left = np.max([y_topleft_gt, y_topleft_p])
-    x_bottom_right = np.min([x_bottomright_gt, x_bottomright_p])
-    y_bottom_right = np.min([y_bottomright_gt, y_bottomright_p])
+    # Calculate intersection area
+    intersect_width = intersect_x2 - intersect_x1
+    intersect_height = intersect_y2 - intersect_y1
 
-    intersection_area = (x_bottom_right - x_top_left + 1) * (y_bottom_right - y_top_left + 1)
+    if intersect_width <= 0 or intersect_height <= 0:
+        return 0.0
 
-    union_area = (GT_bbox_area + Pred_bbox_area - intersection_area)
+    intersection_area = intersect_width * intersect_height
 
-    return intersection_area / union_area
+    # Calculate union area
+    area_box1 = (x2_1 - x1_1) * (y2_1 - y1_1)
+    area_box2 = (x2_2 - x1_2) * (y2_2 - y1_2)
+    union_area = area_box1 + area_box2 - intersection_area
+
+    # Calculate IoU
+    iou = intersection_area / union_area
+
+    return iou
 
 def getOverlapResults(prediction, actualBoxes, iouThresh):
     gt_idx_thr=[]
@@ -414,13 +448,42 @@ def getOverlapResults(prediction, actualBoxes, iouThresh):
         fn = len(actualBoxes) - len(gt_match_idx)
     return tp, fp, fn
 
+def getOverlapResultsRefactor(prediction, actualBoxes, iouThresh):
+    truePositives, falsePositives, falseNegative = 0, 0, 0
+    for box in prediction['boxes']:
+        bestIOU = 0
+        for actBox in actualBoxes:
+            currentIOU = calculateIOU(box, actBox)
+            if currentIOU > bestIOU:
+                bestIOU = currentIOU
+        if bestIOU > iouThresh:
+            truePositives += 1
+            #remove Good prediction
+        else:
+            falsePositives += 1
+
+    for actBox in actualBoxes:
+        bestIOU = 0
+        for box in prediction['boxes']:
+            currentIOU = calculateIOU(box, actBox)
+            if currentIOU > bestIOU:
+                bestIOU = currentIOU
+        if bestIOU < iouThresh:
+            falseNegative += 1
+
+    print("TP: {}, FP: {}, FN: {}".format(truePositives, falsePositives, falseNegative))
+    return truePositives, falsePositives, falseNegative
+
+
+
+
 if __name__ == '__main__':
-    # configParser = ConfigHandler(CONFIGPATH)
-    # generateAllDataSets(DATA_SET_PATH, configParser.getIsOnlyDetect())
-    # if not os.path.isdir(SPLITTED_DATA_SET_PATH):
-    #     os.mkdir(SPLITTED_DATA_SET_PATH)
-    #split_images()
-    # fixIncorrectSplittedCsv()
+    configParser = ConfigHandler(CONFIGPATH)
+    generateAllDataSets(DATA_SET_PATH, configParser.getIsOnlyDetect())
+    if not os.path.isdir(SPLITTED_DATA_SET_PATH):
+        os.mkdir(SPLITTED_DATA_SET_PATH)
+    split_images()
+    fixIncorrectSplittedCsv()
     split_train_test_validation(SPLITTED_DATA_SET_PATH)
 
 

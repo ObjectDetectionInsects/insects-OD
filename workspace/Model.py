@@ -58,6 +58,7 @@ class Model:
 
     def getPreTrainedObject(self):
         if self.configHandler.isNewModelCreationEnabled():
+            #network is required to download pretrained fasterRcnn model
             model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
             in_features = model.roi_heads.box_predictor.cls_score.in_features
             model.roi_heads.box_predictor = FastRCNNPredictor(in_features, self.numOfClasses)
@@ -96,14 +97,19 @@ class Model:
             if doEvluate:
                 engine.evaluate(self.model, self.dataLoader_Test, device=self.device)
         if doLossPerEpoch:
-            max_loss = max(loss_rate)[0] * 1.1
-            plt.plot(epochs, loss_rate, marker='o')
-            plt.ylim(0,max_loss)
-            plt.xlabel('Epochs')
-            plt.ylabel('Loss')
-            plt.title('Loss per Epoch')
-            plt.grid(True)
-            plt.savefig(os.path.join(OUTPUT_DIR, "lossPerEpoch.png"))
+            self.makeLossEpochPlot(loss_rate, epochs)
+
+    def makeLossEpochPlot(self, loss_rate, epochs):
+        max_loss = max(loss_rate)[0] * 1.1
+        plt.plot(epochs, loss_rate, marker='o')
+        plt.ylim(0, max_loss)
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.title('Loss per Epoch')
+        plt.grid(True)
+        if not os.path.exists(OUTPUT_DIR):
+            os.mkdir(OUTPUT_DIR)
+        plt.savefig(os.path.join(OUTPUT_DIR, "lossPerEpoch.png"))
 
     def filterOutPuts(self, orig_prediction, iou_threshold = 0.3):
         keep = torchvision.ops.nms(orig_prediction['boxes'], orig_prediction['scores'], iou_threshold)
@@ -120,10 +126,10 @@ class Model:
 
     def testOurModel(self):
         imageAmount = self.configHandler.getTestImagesAmount()
-        iou_threshold = self.configHandler.getIouThreshold()
-        validationImages = getValidationImagesAmount()
+        iou_threshold = self.configHandler.getIouThresholdForPredictionOverlap()
+        validationImages = getImageAmountInDir(VALIDATION_DATA_SET_PATH)
         boxThreshold = self.configHandler.getBoxScoreLimit()
-
+        print("cofidence kept are greater than: {}".format(boxThreshold))
         for imageNum in range(imageAmount):
             imageNumberToEval = randrange(validationImages)
             img, target = self.dataSet_Validation[imageNumberToEval]
@@ -141,18 +147,12 @@ class Model:
         print("finished evaluation")
 
     def calculate_precision_recall(self):
-        minVal = self.configHandler.getPrecisionRecallMinIOU()
-        maxVal = self.configHandler.getPrecisionRecallMaxIOU()
-        step = self.configHandler.getPrecisionRecallIouSteps()
         minConfidence = self.configHandler.getPrecisionRecallMinConfidence()
         maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
         step = self.configHandler.getPrecisionRecallConfidenceSteps()
         thresh_hold = self.configHandler.getRetangaleOverlap()
-        iou_threshold_arr = [minVal,maxVal]
-
-        print("iou values tested are: {}".format(iou_threshold_arr))
         confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
-        iou = self.configHandler.getIouThreshold()
+        iou = self.configHandler.getIouThresholdForPrecisionRecall()
 
         print("confidence values tested are: {}".format(confidencesArray))
         print("calculate_precision_recall loading")
@@ -218,7 +218,7 @@ class Model:
         maxConfidence = self.configHandler.getPrecisionRecallMaxConfidence()
         step = self.configHandler.getPrecisionRecallConfidenceSteps()
         confidencesArray = getConfidenceArray(minConfidence, maxConfidence, step)
-        iou = self.configHandler.getIouThreshold()
+        iou = self.configHandler.getIouThresholdForPrecisionRecall()
 
         precisions = []
         recalls = []
@@ -226,14 +226,23 @@ class Model:
         validationImages = [self.dataSet_Validation[imageNum][0] for imageNum in range(0,len(self.dataSet_Validation))]
         actualBoxes = [self.dataSet_Validation[imageNum][1]["boxes"] for imageNum in range(0,len(self.dataSet_Validation))]
         with torch.no_grad():
-            predictions = [self.model([img.to(self.device)])[0] for img in
+            # predictionsList = [self.model([img.to(self.device)])[0] for img in
+            #                validationImages]
+            predictionsList = [self.filterOutPuts(self.model([img.to(self.device)])[0], iou_threshold=0.1) for img in
                            validationImages]
+        print("Actual amount of insects in data is: {}".format(countBoxes(actualBoxes)))
+        print("Predicted amount of insects in data is: {}".format(countBoxes(predictionsList, predictionResults=True)))
+
+        predictionsList = filterEdgePredictions(predictionsList, self.configHandler.getImageWidth(), self.configHandler.getImageHeight())
+        print("Predicted amount of insects after filter edges in data is: {}".format(countBoxes(predictionsList, predictionResults=True)))
 
         for confidence in confidencesArray:
-            filteredPredictions = filterLowGradeBoxes(predictions, confidence)
+            filteredPredictions = filterLowGradeBoxes(predictionsList, confidence)
+            print("filtered amount of insects after removing for confidence: {} data is: {}".format(confidence,
+                countBoxes(predictionsList, predictionResults=True)))
             tp, fp, fn = 0, 0, 0
-            for prediction, actual in zip(filteredPredictions, actualBoxes):
-                tpImage, fpImage, fnImage = getOverlapResults(prediction, actual, iou)
+            for predictionsInSingleImage, actual in zip(filteredPredictions, actualBoxes):
+                tpImage, fpImage, fnImage = getOverlapResults(predictionsInSingleImage, actual, iou)
                 tp += tpImage
                 fp += fpImage
                 fn += fnImage
@@ -255,7 +264,10 @@ class Model:
         plt.ylabel('precision')
         plt.title('Precision-Recall Curve')
         print("Precision recall values are {} and {}".format(precisions, recalls))
+        if not os.path.exists(OUTPUT_DIR):
+            os.mkdir(OUTPUT_DIR)
         plt.savefig(os.path.join(OUTPUT_DIR, "precisionRecall.png"))
+
     def export(self):
         if not os.path.exists(OUTPUT_DIR):
             os.mkdir(OUTPUT_DIR)
