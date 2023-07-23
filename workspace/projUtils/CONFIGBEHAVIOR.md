@@ -1,3 +1,4 @@
+return to home readme [here](../../README.md)
 # Config parameters explanations
 
 The config file has multiple sections to separate different parameters based on their intended use
