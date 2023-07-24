@@ -71,10 +71,8 @@ def getSpecimenFamily(specimenSting):
         return SPECIMEN_FAMILIES.GeneralMoth
     elif specimenSting == SPECIMEN_FAMILIES_STR.Generalparasitoidwasp:
         return SPECIMEN_FAMILIES.GeneralParasitoidWasp
-    elif specimenSting == SPECIMEN_FAMILIES_STR.Unknownfamily:
+    else:# specimenSting == SPECIMEN_FAMILIES_STR.Unknownfamily
         return SPECIMEN_FAMILIES.UnknownFamily
-    else:
-        print("unsupported type {}".format(specimenSting))
 
 
 def dataIsFull(splittedLine, onlyDetction):
@@ -484,7 +482,7 @@ if __name__ == '__main__':
         os.mkdir(SPLITTED_DATA_SET_PATH)
     split_images()
     fixIncorrectSplittedCsv()
-    split_train_test_validation(SPLITTED_DATA_SET_PATH)
+    split_train_test_validation()
 
 
 

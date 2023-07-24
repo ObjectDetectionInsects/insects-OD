@@ -82,3 +82,6 @@ Sections:
    - if True - the model created during the project execution will be saved to disk and can be used for future predictions or retraining
 5. <u>ModelExportName</u> - [Type: String, default: "model"] -
    - the name for the export model pickle file
+
+
+return to home readme [here](../../README.md)
