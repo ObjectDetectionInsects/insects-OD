@@ -9,9 +9,9 @@ general steps:
 
 ### please notice:
 
-- all steps are for data manipulation under workspace\projUtils\utils.py 
+- all steps for data manipulation are location in main function under workspace\projUtils\utils.py 
 - data manipulation is mandatory for the correct flow of the project 
-- expected DataSet pet is one above "workspace" - under the folder DataSets
+- expected DataSet folder is one above "workspace" - under the folder DataSets
 
 
 
