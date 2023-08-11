@@ -276,12 +276,15 @@ class Model:
         pickle.dump(self.model, open(modelPath, 'wb'))
 
     def exportSingleInsect(self):
+        saveToCsv = self.configHandler.getSavePredictionAsCSV()
         if not os.path.exists(OUTPUT_DIR):
             os.mkdir(OUTPUT_DIR)
         inputImagesPath = self.configHandler.getInputImages()
         imagesPath = os.listdir(inputImagesPath)
         minBoxScore = self.configHandler.getBoxScoreLimit()
+        CsvOutPutString = "X, Y, Width, Height\n"
         for image in imagesPath:
+            CsvOutPutString += "{}\n".format(image)
             self.model.eval()
             image_full_path = os.path.join(inputImagesPath, image)
             tensor_img = image_to_tensor(image_full_path)
@@ -295,4 +298,9 @@ class Model:
                 width = int(round(width.min(), 0))
                 height = int(round(height.min(), 0))
                 if score >= minBoxScore:
+                    CsvOutPutString += "{},{},{},{}\n".format(x, y, width, height)
                     get_single_insect_image(image_full_path, x, y, width, height)
+
+        if saveToCsv:
+            with open(os.path.join(OUTPUT_DIR, "Predictions.csv"), "a") as csvFile:
+                csvFile.write(CsvOutPutString)

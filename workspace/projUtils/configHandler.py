@@ -163,6 +163,12 @@ class ConfigHandler(Singleton):
         else:
             return "model"
 
+    def getSavePredictionAsCSV(self):
+        if self.config.has_option('OutPutBehavior', 'savePredictionToCsv'):
+            return self.config.getboolean('OutPutBehavior', 'savePredictionToCsv')
+        else:
+            return False
+
 if __name__ == '__main__':
     #for testing purposes of configHandler object
     configHandler = ConfigHandler(CONFIGPATH)
