@@ -1,6 +1,6 @@
 [General]
-onlyOutput = False
-makeModelFromScratch = True
+onlyOutput = True
+makeModelFromScratch = False
 pathToModelToLoad = D:\University\objectDetectionInsects\modelTesting\10_Epochs_Ori.pkl
 inputImages = D:\University\objectDetectionInsects\inputTesting
 
@@ -32,3 +32,4 @@ imagesCountToTest = 0
 imageDPI = 500
 exportModelAsPickle = True
 ModelExportName = 20_Epochs_Ori
+savePredictionToCsv = True
