@@ -1,4 +1,5 @@
-[project_poster_insects.pdf](https://github.com/user-attachments/files/16325486/project_poster_insects.pdf)
+# For an overview, take a look at the project poster bellow
+[project_poster.pdf](https://github.com/user-attachments/files/16325486/project_poster_insects.pdf)
 s
 # Insects object detection project overview 
 
